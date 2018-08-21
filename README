@@ -1,0 +1,33 @@
+hårdvarumoduler i bakplanet heter "devicar".
+
+mjukvarumoduler heter "moduler", och kan vara drivrutiner för
+hårdvarudevicar eller andra mjukvaruenheter av olika slag.hde som
+styr hårdvara heter "statiska" moduler, och kan bara instantieras en
+gång. rena mjukvarumoduler, som man kan instantiera bäst man vil,
+heter "dynamiska" moduler.
+
+en typ av modul heter en "klass".
+
+för att instantiera en klass kör man dess create()-funktion, som
+returnerar en instans. denna har ett antal inputtar och ett antal
+outputtar, så kallade "jack", med namn och typer. bland typerna finns
+enkla typer (int32, bool), strukturella typer (empty, array, bundle),
+samt en typ för not-events en output kan kopplas till noll eller
+flera inputs. inputs kan vara okopplade eller kopplade till en output.
+
+moduler kan sättas som "körande" med run_module(). detta gör att denna
+moduls tick() körs en gång per millisekund. innan en modules tick()
+körs, kollas alla dess inputtar för nya data. detta görs genom att de
+följs till sina outputtar, och om outputtens modul inte har körts än
+detta tick så körs den nu. detta görs rekursivt. i slutänden har allt
+som är inkopplat fått köra.
+
+de data som kommuniceras mellan modulerna är normalt enkla tillstånd,
+som uppdateras varje millisekund. undantaget är tangent-events från
+klaviaturen, som bildar en kö som mottagaren får gå igenom och
+behandla. kön kastas dock bort varje tick.
+
+poängen med "körande" moduler är att man sätter som körande de
+hårdvarumoduler som man vill ska vara aktiva och generera ljud, så
+evalueras allting som är kopplat till dem men inget annat, och inga
+hårdvarumoduler som man inte använder behöver slösa tid.
