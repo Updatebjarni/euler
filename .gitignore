@@ -27,6 +27,7 @@
 *.i*86
 *.x86_64
 *.hex
+euler-demo
 
 # Debug files
 *.dSYM/
