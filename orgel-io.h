@@ -15,4 +15,10 @@
 #define MODULE_WRITE(n)   outw(n, ORGEL_DATAPORT)
 #define MODULE_READ()     inw(ORGEL_DATAPORT)
 
+extern int hardware_lock;
+#define TRY_LOCK_HARDWARE() \
+        __atomic_exchange_n(&hardware_lock, 1, __ATOMIC_SEQ_CST)
+#define LOCK_HARDWARE() while(TRY_LOCK_HARDWARE());
+#define UNLOCK_HARDWARE() __atomic_store_n(&hardware_lock, 0, __ATOMIC_SEQ_CST)
+
 #endif

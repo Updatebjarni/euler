@@ -22,7 +22,7 @@ void cmd_quit(char **cmdline){
   exit(0);
   }
 
-const char help_quit[]="Avslutar programmet.\n";
+const char help_quit[]="Quits the program.\n";
 
 char **tokenise(char *line){
   int i=0;
@@ -53,6 +53,8 @@ int main(int argc, char *argv[]){
   SELECT_MODULE(0);
 
   start_rt();
+  module *mog=create_module("mog");
+  run_module(mog);
 
   while((line=readline("euler> "))){
     char **toklist=tokenise(line);
@@ -61,7 +63,7 @@ int main(int argc, char *argv[]){
 
       void (*cmdfunc)(char **)=find_command(toklist[0]);
       if(cmdfunc)cmdfunc(toklist);
-      else printf("Okänt kommando: %s\n", toklist[0]);
+      else printf("Unknown command: %s\n", toklist[0]);
       }
 
     free(toklist);

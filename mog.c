@@ -21,10 +21,10 @@ static module module_object;
 static int current=1;
 
 static output_jack mog_outputs[]={
-  {"nedre manual höger", TYPE_KEY_EVENTS,
+  {"lower-right", TYPE_KEY_EVENTS,
    .terminal={&module_object, {.key_events={0, mog_out}}, 0, 0}
    },
-  {"nedre manual vänster", TYPE_KEY_EVENTS,
+  {"lower-left", TYPE_KEY_EVENTS,
    .terminal={&module_object, {.key_events={0, mog_out}}, 0, 0}
    }
   };
@@ -34,6 +34,8 @@ static void read_keys(unsigned short *buf){
   MODULE_SET_REG(0);
   while(!((*buf++=MODULE_READ())&0x8000));
   }
+
+volatile struct{char key; char ready;}single_grab;
 
 static void tick(module *m, int elapsed){
   if(HEAD.key!=-1){
@@ -55,11 +57,15 @@ static void tick(module *m, int elapsed){
     new=keybits[current][i];
     new&=~bouncemask[i]; new|=(old&bouncemask[i]);
     keybits[current][i]=new;
-    changed=new^old;
+    changed=(new^old)&0xFFF;
 
     if(changed){
       for(int key=0; changed; ++key, changed>>=1){
         if(changed&1){
+          if(new&(1<<key)){
+            single_grab.key=i*12+key;
+            single_grab.ready=1;
+            }
           mog_out[mog_out_len].key=i*12+key;
           mog_out[mog_out_len].state=!!(new&(1<<key));
           ++mog_out_len;
@@ -76,6 +82,12 @@ static void tick(module *m, int elapsed){
 
   mog_outputs[0].terminal.value.key_events.len=mog_out_len;
   current=!current;
+  }
+
+int mog_grab_key(){
+  single_grab.ready=0;
+  while(!single_grab.ready);
+  return single_grab.key;
   }
 
 /*
@@ -108,6 +120,7 @@ class mog_class;
 
 static module module_object={
   &mog_class,    // struct class *type;
+  0,             // char *name;
   tick,          // void (*tick)(module *, int elapsed);
   0,             // void (*destroy)(module *);
   {0, TYPE_EMPTY},  // inputs
@@ -116,9 +129,8 @@ static module module_object={
   0              // config
   };
 
-module *mog_create(){
+static module *mog_create(){
   read_keys(keybits[!current]);
-  run_module(&module_object);
   return &module_object;
   }
 

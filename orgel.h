@@ -1,6 +1,8 @@
 #ifndef ORGEL_H
 #define ORGEL_H
 
+#include<stdio.h>
+
 #define STATIC_CLASS  1
 #define DYNAMIC_CLASS 0
 
@@ -80,6 +82,9 @@ void start_rt(void);
 void stop_rt(void);
 void run_module(module *);
 void stop_module(module *);
+module *find_module(char *name);
+class *find_class(char *name);
+module *create_module(char *class_name);
 output_jack *find_output(char *);
 input_jack *find_input(char *);
 int connect_jacks(output_jack *, input_jack *);
@@ -95,5 +100,15 @@ struct command{
 extern struct command commands[];
 extern int ncommands;
 void (*find_command(char *name))(char **);
+
+FILE *columns(void);
+
+extern int modules_lock;
+#define TRY_LOCK_MODULES() \
+        __atomic_exchange_n(&modules_lock, 1, __ATOMIC_SEQ_CST)
+#define LOCK_MODULES() while(TRY_LOCK_MODULES());
+#define UNLOCK_MODULES() __atomic_store_n(&modules_lock, 0, __ATOMIC_SEQ_CST)
+
+int mog_grab_key();
 
 #endif
