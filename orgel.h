@@ -22,6 +22,8 @@ typedef enum{
   TYPE_KEY_EVENTS
   }jack_type;
 
+typedef struct module module;
+
 typedef struct key_event{
   unsigned char key, state;
   }key_event;
@@ -32,43 +34,42 @@ typedef union{
   struct{int len; key_event *buf;}key_events;
   }jack_value;
 
-typedef struct output_jack output_jack;
-struct output_jack{
-  char *name;
-  jack_type type;
-  union{
-    struct{int len; output_jack *elements;}bundle;
-    struct{int len; output_jack *elements;}array;
-    struct{
-      struct module *parent_module;
-      jack_value value;
-      struct input_jack *connections;
-      int nconnections;
-      }terminal;
-    };
+typedef struct named_jack named_jack;
+typedef struct jack jack;
+
+struct out_terminal{
+  jack *connections;
+  int nconnections;
+  jack_value value;
+  module *parent_module;
   };
 
-typedef struct input_jack input_jack;
-struct input_jack{
-  char *name;
-  jack_type type;
+struct in_terminal{jack *connection; int state;};
+
+struct jack{
   union{
-    struct{int len; input_jack *elements;}bundle;
-    struct{int len; input_jack *elements;}array;
-    struct{int state; output_jack *connection;}terminal;
+    struct{named_jack *elements; int len;}bundle;
+    struct{jack *elements; int len;}array;
+    struct in_terminal in_terminal;
+    struct out_terminal out_terminal;
     };
+  jack_type type;
   };
 
-typedef struct module module;
+struct named_jack{
+  jack element;
+  char *name;
+  };
+
 struct module{
   struct class *type;
   char *name;
   void (*tick)(module *, int elapsed);
   void (*destroy)(module *);
-  input_jack inputs;
-  output_jack outputs;
+  jack input;
+  jack output;
   int last_updated;
-  void (*config)(struct module *);  
+  void (*config)(module *);
   };
 
 typedef struct class{
@@ -85,9 +86,9 @@ void stop_module(module *);
 module *find_module(char *name);
 class *find_class(char *name);
 module *create_module(char *class_name);
-output_jack *find_output(char *);
-input_jack *find_input(char *);
-int connect_jacks(output_jack *, input_jack *);
+jack *find_output(char *);
+jack *find_input(char *);
+int connect_jacks(jack *out, jack *in);
 
 extern class *all_classes[];
 extern module **loaded_modules;

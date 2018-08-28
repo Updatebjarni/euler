@@ -6,6 +6,8 @@
 #define MOG_MODULE_NUMBER 16
 
 
+#ifdef kuken
+
 struct debounce{
   char key, timer;
   };
@@ -140,3 +142,5 @@ class mog_class={
   mog_create,
   0
   };
+
+#endif
