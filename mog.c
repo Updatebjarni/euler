@@ -2,11 +2,11 @@
 #include"orgel.h"
 #include"orgel-io.h"
 
+#include"mog.spec.c"
+
 #define DEBOUNCE_TIME 10
 #define MOG_MODULE_NUMBER 16
 
-
-#ifdef kuken
 
 struct debounce{
   char key, timer;
@@ -18,18 +18,8 @@ static struct debounce timers[12*10]={{-1, 0}};
 static int timers_head=0, timers_tail=0;
 #define HEAD timers[timers_head]
 
-static struct key_event mog_out[12*10];
-static module module_object;
+static struct key_event *mog_out;
 static int current=1;
-
-static output_jack mog_outputs[]={
-  {"lower-right", TYPE_KEY_EVENTS,
-   .terminal={&module_object, {.key_events={0, mog_out}}, 0, 0}
-   },
-  {"lower-left", TYPE_KEY_EVENTS,
-   .terminal={&module_object, {.key_events={0, mog_out}}, 0, 0}
-   }
-  };
 
 static void read_keys(unsigned short *buf){
   SELECT_MODULE(MOG_MODULE_NUMBER);
@@ -40,6 +30,9 @@ static void read_keys(unsigned short *buf){
 volatile struct{char key; char ready;}single_grab;
 
 static void tick(module *m, int elapsed){
+  struct output_bundle *output=
+    (struct output_bundle *)m->output.bundle.elements;
+
   if(HEAD.key!=-1){
     if(!--HEAD.timer){
       bouncemask[HEAD.key/12]&=~(1<<(HEAD.key%12));
@@ -82,7 +75,7 @@ static void tick(module *m, int elapsed){
       }
     }
 
-  mog_outputs[0].terminal.value.key_events.len=mog_out_len;
+  output->right.key_events.len=mog_out_len;
   current=!current;
   }
 
@@ -118,29 +111,19 @@ void split_keys(){
   }
 */
 
-class mog_class;
-
-static module module_object={
-  &mog_class,    // struct class *type;
-  0,             // char *name;
-  tick,          // void (*tick)(module *, int elapsed);
-  0,             // void (*destroy)(module *);
-  {0, TYPE_EMPTY},  // inputs
-  {0, TYPE_BUNDLE, .bundle={2, mog_outputs}},  // outputs
-  0,             // last_updated
-  0              // config
-  };
-
-static module *mog_create(){
+static int mog_init(module *m, char **argv){
+  struct output_bundle *out=
+    (struct output_bundle *)m->output.bundle.elements;
+  mog_out=out->right.key_events.buf;
   read_keys(keybits[!current]);
-  return &module_object;
+  return 0;
   }
 
 class mog_class={
   "mog", "Människa-Orgel-Gränssnittet",
+  &input, &output,
+  tick, 0, 0,
   STATIC_CLASS,
-  mog_create,
+  mog_init,
   0
   };
-
-#endif

@@ -14,6 +14,8 @@ void cmd_lsclass(char **);
 extern const char help_lsclass[];
 void cmd_create(char **);
 extern const char help_create[];
+void cmd_show(char **);
+extern const char help_show[];
 
 struct command commands[]={
   {"quit", cmd_quit, help_quit},
@@ -24,7 +26,8 @@ struct command commands[]={
   {"?", cmd_help, help_help},
   {"lsmod", cmd_lsmod, help_lsmod},
   {"lsclass", cmd_lsclass, help_lsclass},
-  {"create", cmd_create, help_create}
+  {"create", cmd_create, help_create},
+  {"show", cmd_show, help_show}
   };
 
 int ncommands=sizeof(commands)/sizeof(commands[0]);

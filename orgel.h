@@ -22,6 +22,9 @@ typedef enum{
   TYPE_KEY_EVENTS
   }jack_type;
 
+#define DIR_IN  0
+#define DIR_OUT 1
+
 typedef struct module module;
 
 typedef struct key_event{
@@ -37,14 +40,14 @@ typedef union{
 typedef struct named_jack named_jack;
 typedef struct jack jack;
 
-struct out_terminal{
+typedef struct out_terminal{
+  jack_value value;
   jack *connections;
   int nconnections;
-  jack_value value;
   module *parent_module;
-  };
+  }out_terminal;
 
-struct in_terminal{jack *connection; int state;};
+typedef struct in_terminal{jack *connection; int state;} in_terminal;
 
 struct jack{
   union{
@@ -66,16 +69,20 @@ struct module{
   char *name;
   void (*tick)(module *, int elapsed);
   void (*destroy)(module *);
+  void (*config)(module *, char **);
   jack input;
   jack output;
   int last_updated;
-  void (*config)(module *);
   };
 
 typedef struct class{
   char *name, *descr;
+  jack *default_input, *default_output;
+  void (*default_tick)(module *, int elapsed);
+  void (*default_destroy)(module *);
+  void (*default_config)(module *, char **);
   int is_static;
-  module *(*create)();
+  int (*init)(module *, char **);
   int create_counter;
   }class;
 
@@ -85,10 +92,12 @@ void run_module(module *);
 void stop_module(module *);
 module *find_module(char *name);
 class *find_class(char *name);
-module *create_module(char *class_name);
+module *create_module(char *class_name, char **argv);
 jack *find_output(char *);
 jack *find_input(char *);
 int connect_jacks(jack *out, jack *in);
+int create_jack(jack *to, jack *template, int dir, module *m);
+void show_jack(jack *j, int dir, int indent);
 
 extern class *all_classes[];
 extern module **loaded_modules;

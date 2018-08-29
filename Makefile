@@ -1,16 +1,25 @@
 CFLAGS := -O2 -std=c99 -Wall
 
-MODULES := mog
+MODULES := mog prio na
 MODOBJS := $(patsubst %,%.o,$(MODULES))
 
-euler-demo: main.o modules.o commands.o $(MODOBJS)
-	gcc ${CFLAGS} -o euler-demo main.o modules.o commands.o $(MODOBJS) \
+euler-demo: all_modules.c main.o modules.o jacks.o commands.o $(MODOBJS)
+	gcc ${CFLAGS} -o euler-demo main.o modules.o jacks.o commands.o \
+	    $(MODOBJS) \
 	    -lpthread -lreadline -ltermcap
+
+.PHONY: all_modules.c
+all_modules.c:
+	echo extern class $(MODULES:%=%_class,) | sed 's/,$$/;/' \
+	     > all_modules.c
+	echo 'class *all_classes[]={' $(MODULES:%='&%_class,') ' 0};' \
+	     >> all_modules.c
 
 jackspec: jackspec.c
 	gcc ${CFLAGS} -o jackspec jackspec.c
 
-%.c: orgel-io.h orgel.h
+%.o: %.c orgel-io.h orgel.h
+	gcc -c ${CFLAGS} -o $@ $<
 
 $(MODOBJS): %.o: %.spec.c
 

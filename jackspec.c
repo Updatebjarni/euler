@@ -8,9 +8,6 @@
 #include<unistd.h>
 #include"orgel.h"
 
-#define DIR_IN  0
-#define DIR_OUT 1
-
 
 static char *infile;
 static char *p, *this_line;
@@ -46,7 +43,12 @@ char *jackstr(jack *j, char *name){
     case TYPE_EMPTY: return strdup("{.type=TYPE_EMPTY}");
     case TYPE_BOOL: return strdup("{.type=TYPE_BOOL}");
     case TYPE_INT32: return strdup("{.type=TYPE_INT32}");
-    case TYPE_KEY_EVENTS: return strdup("{.type=TYPE_KEY_EVENTS}");
+    case TYPE_KEY_EVENTS:
+      if(dir==DIR_IN)return strdup("{.type=TYPE_KEY_EVENTS}");
+      asprintf(&str, "{.type=TYPE_KEY_EVENTS, "
+                      ".out_terminal.value.key_events.len=%d}",
+                     j->out_terminal.value.key_events.len);
+      return str;
     case TYPE_ARRAY:
       asprintf(&str, "{.type=TYPE_ARRAY,"
                      " .array={.len=%d, .elements=(jack *)&%s_template}}",
@@ -79,7 +81,7 @@ char *lex_identifier(){
   skip_ws();
   column_before=column;
   sscanf(p, "%*[A-Za-z]%n", &len); if(!len)return 0;
-  sscanf(p, "%m[A-Za-z0-9-]%n", &id, &len);
+  sscanf(p, "%m[A-Za-z0-9_]%n", &id, &len);
   p+=len;
   column+=len;
 
@@ -208,16 +210,18 @@ jack *parse_jack(){
                pathstr(list[i].name), list[i].name, list[i].name);
       else if(list[i].element.type==TYPE_ARRAY){
         if(is_terminal(*list[i].element.array.elements))
-          printf("  union{  union{struct %s_terminal; struct jack;} *%s; "
+          printf("  union{  union{%s; struct jack;} *%s; "
                            "named_jack _%s; };\n",
-                 (dir==DIR_IN)?"in":"out", list[i].name, list[i].name);
+                 (dir==DIR_IN)?"in_terminal":"jack_value",
+                 list[i].name, list[i].name);
         else
           printf("  union{ struct %s_template *%s; named_jack _%s;};\n",
                  pathstr(list[i].name), list[i].name, list[i].name);
         }
       else
-        printf("  union{ struct %s_terminal %s; named_jack _%s;};\n",
-               (dir==DIR_IN)?"in":"out", list[i].name, list[i].name);
+        printf("  union{%s %s; named_jack _%s;};\n",
+               (dir==DIR_IN)?"in_terminal":"jack_value",
+               list[i].name, list[i].name);
       }
     printf("  }%s_bundle={\n", s);
     for(int i=0; i<n; ++i){

@@ -11,15 +11,9 @@
 
 #define PERIOD 1000000L
 
-extern class mog_class, sid_class;
+#include"all_modules.c"
 
 int modules_lock, hardware_lock;
-
-class *all_classes[]={
-  &mog_class,
-//  &sid_class,
-  0
-  };
 
 module **all_modules;
 int nmodules;
@@ -59,10 +53,27 @@ class *find_class(char *name){
   return 0;
   }
 
-module *create_module(char *class_name){
+module *create_module(char *class_name, char **argv){
   class *c=find_class(class_name);
   if(!c || (c->is_static && c->create_counter))return 0;
-  module *m=c->create();
+
+  module *m=malloc(sizeof(module));
+  m->type=c;
+  m->name=0;
+  m->tick=c->default_tick;
+  m->destroy=c->default_destroy;
+  m->config=c->default_config;
+  if(c->default_input)
+    create_jack(&m->input, c->default_input, DIR_IN, m);
+  else
+    m->input.type=TYPE_EMPTY;
+  if(c->default_output)
+    create_jack(&m->output, c->default_output, DIR_OUT, m);
+  else
+    m->output.type=TYPE_EMPTY;
+  m->last_updated=0;
+
+  c->init(m, argv);
   ++(c->create_counter);
   if(c->is_static)
     m->name=strdup(class_name);
@@ -80,6 +91,7 @@ const char help_create[]="Create a new module.\n";
 
 void cmd_create(char **cmdline){
   module *m;
+  char **argv=cmdline+2;
   if(!cmdline[1]){
     printf("Usage: create <class-name> [<instance-name>]\n");
     return;
@@ -93,8 +105,9 @@ void cmd_create(char **cmdline){
       printf("Name \"%s\" already exists.\n", cmdline[2]);
       return;
       }
+    ++argv;
     }
-  if(!(m=create_module(cmdline[1]))){
+  if(!(m=create_module(cmdline[1], argv))){
     printf("Failed to create module.\n");
     return;
     }
@@ -174,3 +187,26 @@ void stop_rt(void){
   quit=1;
   pthread_join(thread, NULL);
   }
+
+void cmd_show(char **argv){
+  module *m=find_module(argv[1]);
+  if(!m){
+    printf("No such module.\n");
+    return;
+    }
+  printf("%s module \"%s\" (of class \"%s\"):\n",
+         m->type->is_static?"Static":"Dynamic", m->name, m->type->name);
+  if(m->input.type!=TYPE_EMPTY){
+    printf("input: ");
+    show_jack(&m->input, DIR_IN, 0);
+    }
+  if(m->output.type!=TYPE_EMPTY){
+    printf("output: ");
+    show_jack(&m->output, DIR_OUT, 0);
+    }
+  if(m->output.type==TYPE_EMPTY)printf("(This module provides no output)\n");
+  if(m->input.type==TYPE_EMPTY)printf("(This module takes no input)\n");
+  }
+
+const char help_show[]=
+  "show <module> shows information about a module.";
