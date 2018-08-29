@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
   SELECT_MODULE(0);
 
   start_rt();
-  module *mog=create_module("mog");
+  module *mog=create_module("mog", 0);
   run_module(mog);
 
   while((line=readline("euler> "))){

@@ -1,0 +1,28 @@
+
+
+För att skriva en modul gör man följande:
+
+  * Skapar en C-fil som heter som modulen, t.ex. "na.c" för modulen "na".
+    Denna ska innehålla en globalt definierad class-strukt med namn enligt
+    mönstret "na_class".
+
+  * Lägger till basnamnet, "na", i MODULES högst upp i makefilen.
+
+  * Skriver en na.spec med specifikationer för inputs och outputs.
+    sid.spec är ett rätt bra exempel på syntaxen.
+
+  * I na.c inkluderar man na.spec.c, som genereras från na.spec.
+
+Se struct-typerna module och class i orgel.h.
+
+I C-filen (na.c) fyller man i defaultvärden i klass-strukten. Se na.c
+för exempel på detta. När funktionen create_module() anropas allokerar
+den en modul-strukt och fyller i den med defaultvärdena från
+klass-strukten. Man behöver inte ange värden i strukten om man inte
+vill, och man får då harmlösa nullvärden.  Sedan anropar
+create_module() i sin tur klassens init-funktion, som får fylla i
+eller ändra värden om den vill. Den får också resten av kommandoraden
+och kan tolka parametrar därifrån om den behöver. Namnet på
+modulinstansen fixar create_module() själv, så det låter man bli att
+ändra på.
+

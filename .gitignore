@@ -28,6 +28,7 @@
 *.x86_64
 *.hex
 euler-demo
+jackspec
 
 # Debug files
 *.dSYM/
@@ -35,6 +36,12 @@ euler-demo
 # Emacs-auto-backup
 *~
 
+# Emacs auto-save
+\#*#
+
 # Emacs desktop files
 .emacs.desktop
 .emacs.desktop.lock
+
+# C source generated from .spec files by jackspec
+*.spec.c

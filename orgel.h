@@ -22,6 +22,11 @@ typedef enum{
   TYPE_KEY_EVENTS
   }jack_type;
 
+#define DIR_IN  0
+#define DIR_OUT 1
+
+typedef struct module module;
+
 typedef struct key_event{
   unsigned char key, state;
   }key_event;
@@ -32,49 +37,52 @@ typedef union{
   struct{int len; key_event *buf;}key_events;
   }jack_value;
 
-typedef struct output_jack output_jack;
-struct output_jack{
-  char *name;
-  jack_type type;
+typedef struct named_jack named_jack;
+typedef struct jack jack;
+
+typedef struct out_terminal{
+  jack_value value;
+  jack *connections;
+  int nconnections;
+  module *parent_module;
+  }out_terminal;
+
+typedef struct in_terminal{jack *connection; int state;} in_terminal;
+
+struct jack{
   union{
-    struct{int len; output_jack *elements;}bundle;
-    struct{int len; output_jack *elements;}array;
-    struct{
-      struct module *parent_module;
-      jack_value value;
-      struct input_jack *connections;
-      int nconnections;
-      }terminal;
+    struct{named_jack *elements; int len;}bundle;
+    struct{jack *elements; int len;}array;
+    struct in_terminal in_terminal;
+    struct out_terminal out_terminal;
     };
+  jack_type type;
   };
 
-typedef struct input_jack input_jack;
-struct input_jack{
+struct named_jack{
+  jack element;
   char *name;
-  jack_type type;
-  union{
-    struct{int len; input_jack *elements;}bundle;
-    struct{int len; input_jack *elements;}array;
-    struct{int state; output_jack *connection;}terminal;
-    };
   };
 
-typedef struct module module;
 struct module{
   struct class *type;
   char *name;
   void (*tick)(module *, int elapsed);
   void (*destroy)(module *);
-  input_jack inputs;
-  output_jack outputs;
+  void (*config)(module *, char **);
+  jack input;
+  jack output;
   int last_updated;
-  void (*config)(struct module *);  
   };
 
 typedef struct class{
   char *name, *descr;
+  jack *default_input, *default_output;
+  void (*default_tick)(module *, int elapsed);
+  void (*default_destroy)(module *);
+  void (*default_config)(module *, char **);
   int is_static;
-  module *(*create)();
+  int (*init)(module *, char **);
   int create_counter;
   }class;
 
@@ -84,10 +92,12 @@ void run_module(module *);
 void stop_module(module *);
 module *find_module(char *name);
 class *find_class(char *name);
-module *create_module(char *class_name);
-output_jack *find_output(char *);
-input_jack *find_input(char *);
-int connect_jacks(output_jack *, input_jack *);
+module *create_module(char *class_name, char **argv);
+jack *find_output(char *);
+jack *find_input(char *);
+int connect_jacks(jack *out, jack *in);
+int create_jack(jack *to, jack *template, int dir, module *m);
+void show_jack(jack *j, int dir, int indent);
 
 extern class *all_classes[];
 extern module **loaded_modules;
