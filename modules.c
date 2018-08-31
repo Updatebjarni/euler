@@ -53,11 +53,7 @@ class *find_class(char *name){
   return 0;
   }
 
-module *create_module(char *class_name, char **argv){
-  class *c=find_class(class_name);
-  if(!c || (c->is_static && c->create_counter))return 0;
-
-  module *m=malloc(sizeof(module));
+void default_module_init(module *m, class *c){
   m->type=c;
   m->name=0;
   m->tick=c->default_tick;
@@ -72,8 +68,20 @@ module *create_module(char *class_name, char **argv){
   else
     m->output.type=TYPE_EMPTY;
   m->last_updated=0;
+  }
 
-  c->init(m, argv);
+module *create_module(char *class_name, char **argv){
+  module *m;
+  class *c=find_class(class_name);
+  if(!c || (c->is_static && c->create_counter))return 0;
+
+  if(!c->create){
+    m=malloc(sizeof(module));
+    default_module_init(m, c);
+    }
+  else
+    m=c->create(argv);
+
   ++(c->create_counter);
   if(c->is_static)
     m->name=strdup(class_name);
@@ -125,6 +133,14 @@ void run_module(module *m){
   UNLOCK_MODULES();
   }
 
+const char help_run[]="Set a module as running. Usage: run <module>\n";
+
+void cmd_run(char **argv){
+  module *m=find_module(argv[1]);
+  if(!m){printf("not found\n"); return;}
+  run_module(m);
+  }
+
 void stop_module(module *m){
   for(int i=0; i<nrunning; ++i)
     if(running[i]==m){
@@ -137,6 +153,32 @@ void stop_module(module *m){
   }
 
 static volatile int quit;
+static int oddeven;
+
+static void jack_depend(jack *j){
+  if((j->type==TYPE_EMPTY) || is_terminal(j)){
+    if(!(j->in_terminal.connection))return;
+    module *m=j->in_terminal.connection->out_terminal.parent_module;
+    if(!m)return;
+    if(m->last_updated!=oddeven){
+      jack_depend(&(m->input));
+      m->tick(m, 1);
+      m->last_updated=oddeven;
+      }
+    }
+  else{
+    if(j->type==TYPE_ARRAY){
+      jack *e=j->array.elements;
+      for(int i=0; i<j->array.len; ++i)
+        jack_depend(e+i);
+      }
+    else if(j->type==TYPE_BUNDLE){
+      named_jack *e=j->bundle.elements;
+      for(int i=0; i<j->bundle.len; ++i)
+        jack_depend(&(e[i].element));
+      }
+    }
+  }
 
 static void *rt_thread(void *data){
   struct timespec next;
@@ -146,10 +188,14 @@ static void *rt_thread(void *data){
     if(quit)return 0;
 
     if(!TRY_LOCK_MODULES()){
-      for(int i=0; i<nrunning; ++i)
+      for(int i=0; i<nrunning; ++i){
+        jack_depend(&(running[i]->input));
         running[i]->tick(running[i], 1);
+        running[i]->last_updated=oddeven;
+        }
       UNLOCK_MODULES();
       }
+    oddeven=1-oddeven;
 
     next.tv_nsec+=PERIOD;
     while(next.tv_nsec>=1000000000){

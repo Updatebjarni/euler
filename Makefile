@@ -1,12 +1,12 @@
-CFLAGS := -O2 -std=c99 -Wall
+CFLAGS := -O2 -std=c99 -Wall -fplan9-extensions
 
-MODULES := mog prio na
+MODULES := mog prio na sid add
 MODOBJS := $(patsubst %,%.o,$(MODULES))
 
 euler-demo: all_modules.c main.o modules.o jacks.o commands.o $(MODOBJS)
 	gcc ${CFLAGS} -o euler-demo main.o modules.o jacks.o commands.o \
 	    $(MODOBJS) \
-	    -lpthread -lreadline -ltermcap
+	    -lpthread -lreadline -ltermcap -lm
 
 .PHONY: all_modules.c
 all_modules.c:

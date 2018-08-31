@@ -16,26 +16,6 @@
 #include"orgel.h"
 #include"orgel-io.h"
 
-
-void cmd_quit(char **cmdline){
-  stop_rt();
-  exit(0);
-  }
-
-const char help_quit[]="Quits the program.\n";
-
-char **tokenise(char *line){
-  int i=0;
-  char **toklist=malloc(sizeof(char *));
-  toklist[0]=strtok(line, " \t");
-  while(toklist[i]){
-    ++i;
-    toklist=realloc(toklist, sizeof(char *)*(i+1));
-    toklist[i]=strtok(NULL, " \t");
-    }
-  return toklist;
-  }
-
 char **orgelperm_argv;
 
 void require_orgelperm(int foo){
@@ -57,16 +37,10 @@ int main(int argc, char *argv[]){
   run_module(mog);
 
   while((line=readline("euler> "))){
-    char **toklist=tokenise(line);
-    if(toklist[0]){
+    if(strcspn(line, " \t")){
       add_history(line);
-
-      void (*cmdfunc)(char **)=find_command(toklist[0]);
-      if(cmdfunc)cmdfunc(toklist);
-      else printf("Unknown command: %s\n", toklist[0]);
+      run_cmdline(line);
       }
-
-    free(toklist);
     free(line);
     }
 

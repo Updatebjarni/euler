@@ -10,7 +10,7 @@ static void tick(module *m, int elapsed){
 
   if(in->signal.connection && in->control.connection){
     int64_t result=(int64_t)(in->signal.connection->out_terminal.value.int32);
-    result*=pow(2, 1.0*in->control.connection->out_terminal.value.int32/OCTAVE);
+    result+=in->control.connection->out_terminal.value.int32;
     if(result>INT32_MAX)result=INT32_MAX;
     if(result<INT32_MIN)result=INT32_MIN;
     m->output.out_terminal.value.int32=result;
@@ -23,9 +23,9 @@ static int init(module *m, char **argv){
   }
 */
 
-class na_class={
-  "na",                      // char *name
-  "Numerical attenuverter",  // char *descr
+class add_class={
+  "add",                     // char *name
+  "Add two signals",         // char *descr
   &input,                    // jack *default_input
   &output,                   // jack *default_output
   tick,                      // void (*default_tick)(module *, int elapsed)
