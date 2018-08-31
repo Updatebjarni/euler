@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include<string.h>
 #include<stdlib.h>
 #include"orgel.h"
@@ -85,7 +86,8 @@ static jack *lookup(jack *j, char *name){
   return 0;
   }
 
-jack *find_jack(char *pathstr, int dir){
+jack *find_jack(char *_pathstr, int dir){
+  char *pathstr=strdupa(_pathstr);
   char **path=tokenise(pathstr, "/");
   module *m=find_module(path[0]);
   if(!m)return 0;
@@ -142,6 +144,7 @@ void cmd_connect(char **argv){
   jack *in=find_jack(argv[2], DIR_IN);
   if(!in){
     printf("Input jack \"%s\" not found.\n", argv[2]);
+printf("(to be connected to %s)\n", argv[1]);
     return;
     }
   if(connect_jacks(out, in))
