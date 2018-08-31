@@ -1,3 +1,4 @@
+#include<stdlib.h>
 #include<unistd.h>
 #include"orgel.h"
 #include"orgel-io.h"
@@ -56,12 +57,13 @@ static void tick(module *m, int elapsed){
 
     if(changed){
       for(int key=0; changed; ++key, changed>>=1){
+        int keynum=i*12+key+44;
         if(changed&1){
-          if(new&(1<<key)){
-            single_grab.key=i*12+key;
+          if(!(new&(1<<key))){
+            single_grab.key=keynum;
             single_grab.ready=1;
             }
-          mog_out[mog_out_len].key=i*12+key;
+          mog_out[mog_out_len].key=keynum;
           mog_out[mog_out_len].state=!!(new&(1<<key));
           ++mog_out_len;
 
@@ -111,12 +113,17 @@ void split_keys(){
   }
 */
 
-static int mog_init(module *m, char **argv){
+class mog_class;
+
+static module *create(char **argv){
+  module *m=malloc(sizeof(module));
+  default_module_init(m, &mog_class);
   struct output_bundle *out=
     (struct output_bundle *)m->output.bundle.elements;
   mog_out=out->right.key_events.buf;
+  out->_right.element.out_terminal.changed=1;
   read_keys(keybits[!current]);
-  return 0;
+  return m;
   }
 
 class mog_class={
@@ -124,6 +131,6 @@ class mog_class={
   &input, &output,
   tick, 0, 0,
   STATIC_CLASS,
-  mog_init,
+  create,
   0
   };

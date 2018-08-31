@@ -16,8 +16,8 @@ static int dir;
 static char **path;
 static int pathlen;
 
-int is_terminal(jack j){
-  if(j.type==TYPE_BUNDLE || j.type==TYPE_ARRAY)return 0;
+int is_terminal(jack *j){
+  if(j->type==TYPE_BUNDLE || j->type==TYPE_ARRAY)return 0;
   return 1;
   }
 
@@ -209,7 +209,7 @@ jack *parse_jack(){
         printf("  union{ struct %s_bundle *%s; named_jack _%s;};\n",
                pathstr(list[i].name), list[i].name, list[i].name);
       else if(list[i].element.type==TYPE_ARRAY){
-        if(is_terminal(*list[i].element.array.elements))
+        if(is_terminal(list[i].element.array.elements))
           printf("  union{  union{%s; struct jack;} *%s; "
                            "named_jack _%s; };\n",
                  (dir==DIR_IN)?"in_terminal":"jack_value",

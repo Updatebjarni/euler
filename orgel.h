@@ -14,7 +14,7 @@
 #define OCTAVE   134217728L
 #define HALFNOTE 11184811L
 
-enum{UNCHANGED, CHANGED, DISCONNECTED};
+enum{CONNECTED, DISCONNECTED};
 
 typedef enum{
   TYPE_EMPTY, TYPE_BUNDLE, TYPE_ARRAY,
@@ -26,6 +26,8 @@ typedef enum{
 #define DIR_OUT 1
 
 typedef struct module module;
+
+enum{KEY_DOWN, KEY_UP};
 
 typedef struct key_event{
   unsigned char key, state;
@@ -42,12 +44,13 @@ typedef struct jack jack;
 
 typedef struct out_terminal{
   jack_value value;
-  jack *connections;
+  jack **connections;
   int nconnections;
   module *parent_module;
+  int changed;
   }out_terminal;
 
-typedef struct in_terminal{jack *connection; int state;} in_terminal;
+typedef struct in_terminal{jack *connection;} in_terminal;
 
 struct jack{
   union{
@@ -82,19 +85,22 @@ typedef struct class{
   void (*default_destroy)(module *);
   void (*default_config)(module *, char **);
   int is_static;
-  int (*init)(module *, char **);
+  module *(*create)(char **);
   int create_counter;
   }class;
 
+void run_cmdline(char *line);
+char **tokenise(char *str, char *sep);
 void start_rt(void);
 void stop_rt(void);
 void run_module(module *);
 void stop_module(module *);
 module *find_module(char *name);
 class *find_class(char *name);
+void default_module_init(module *m, class *c);
 module *create_module(char *class_name, char **argv);
-jack *find_output(char *);
-jack *find_input(char *);
+jack *find_jack(char *path, int dir);
+int is_terminal(jack *);
 int connect_jacks(jack *out, jack *in);
 int create_jack(jack *to, jack *template, int dir, module *m);
 void show_jack(jack *j, int dir, int indent);

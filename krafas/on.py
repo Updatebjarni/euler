@@ -18,6 +18,9 @@ def on(n):
 
 ioperm(0x1f0, 3, 1)
 outb(1, 0x1f1)
+inb(0x1f0)
+outw(0xe000, 0x1f0)
+inb(0x1f0)
 
 on(0)
 on(1)
