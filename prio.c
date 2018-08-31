@@ -11,6 +11,7 @@ typedef struct prio_module{
   int prio, alloc;
   int held[10], nheld;
   int polyphony;
+struct{int note, voice;}playing[3];
   }prio_module;
 
 static void tick(module *_m, int elapsed){
@@ -19,10 +20,30 @@ static void tick(module *_m, int elapsed){
     jack_value *v=&(m->input.in_terminal.connection->out_terminal.value);
     for(int i=0; i<v->key_events.len; ++i){
       if(v->key_events.buf[i].state==KEY_DOWN){
-        m->held[m->nheld]=v->key_events.buf[i].key;
+int voice=m->playing[0].voice;
+m->playing[0]=m->playing[1];
+m->playing[1]=m->playing[2];
+m->playing[2].voice=voice;
+m->playing[2].note=v->key_events.buf[i].key;
+((struct output_bundle *)m->output.bundle.elements)->monophone[voice].bundle
+                          ->pitch.int32=v->key_events.buf[i].key*HALFNOTE;
+((struct output_bundle *)m->output.bundle.elements)->monophone[voice].bundle
+                          ->gate.bool=1;
+
+       m->held[m->nheld]=v->key_events.buf[i].key;
         ++(m->nheld);
         }
       else{
+for(int n=0; n<3; ++n){
+  if(m->playing[n].note==v->key_events.buf[i].key){
+    int voice=m->playing[n].voice;
+    for(int x=n; x>0; --x)m->playing[x]=m->playing[x-1];
+    m->playing[0].voice=voice; m->playing[0].note=-1;
+    ((struct output_bundle *)m->output.bundle.elements)->monophone[voice].bundle
+                              ->gate.bool=0;
+    break;
+    }
+  }
         int j=0;
         for(int k=0; k<m->nheld; ++k)
           if(v->key_events.buf[i].key!=m->held[k]){
@@ -32,16 +53,15 @@ static void tick(module *_m, int elapsed){
         m->nheld=j;
         }
       }
-    ((struct output_bundle *)m->output.bundle.elements)->monophone[0].bundle-\
->_pitch.element.out_terminal.changed=1;
-    ((struct output_bundle *)m->output.bundle.elements)->monophone[0].bundle-\
->_gate.element.out_terminal.changed=1;
+for(int n=0; n<3; ++n){
+    ((struct output_bundle *)m->output.bundle.elements)->monophone[n].bundle
+                              ->_pitch.element.out_terminal.changed=1;
+    ((struct output_bundle *)m->output.bundle.elements)->monophone[n].bundle
+                              ->_gate.element.out_terminal.changed=1;
+  }
     if(m->nheld){
-      ((struct output_bundle *)m->output.bundle.elements)->monophone[0].bundle->pitch.int32=
-        m->held[0]*HALFNOTE;
-      ((struct output_bundle *)m->output.bundle.elements)->monophone[0].bundle->gate.bool=1;
+
       }
-    else ((struct output_bundle *)m->output.bundle.elements)->monophone[0].bundle->gate.bool=0;
     }
   }
 
@@ -70,7 +90,7 @@ static module *create(char **argv){
   m->alloc=ALLOC_RR;
   m->polyphony=1;
   m->nheld=0;
-
+for(int i=0; i<3; ++i){m->playing[i].note=-1; m->playing[i].voice=i;}
   return (module *)m;
   }
 

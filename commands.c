@@ -123,10 +123,6 @@ void cmd_set(char **argv){
     printf("The jack is not a terminal.\n");
     return;
     }
-  if(j->in_terminal.connection){
-    printf("The jack is already connected.\n");
-    return;
-    }
   long n;
   char *end;
   n=strtol(argv[2], &end, 0);
@@ -134,7 +130,15 @@ void cmd_set(char **argv){
     printf("Invalid value \"%s\".\n", argv[2]);
     return;
     }
-  jack *constant=malloc(sizeof(jack));
+  jack *constant;
+  if(j->in_terminal.connection){
+    if(j->in_terminal.connection->out_terminal.parent_module){
+      printf("The jack is already connected.\n");
+      return;
+      }
+    constant=j->in_terminal.connection;
+    }
+  else constant=malloc(sizeof(jack));
   constant->type=j->type;
   if(j->type==TYPE_BOOL)
     constant->out_terminal.value.bool=n;
