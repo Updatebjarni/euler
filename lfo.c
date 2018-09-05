@@ -1,10 +1,11 @@
+#define _GNU_SOURCE
+
 #include<math.h>
 #include<stdint.h>
 #include<stdlib.h>
 #include"orgel.h"
 
 #include"lfo.spec.c"
-#define _GNU_SOURCE
 
 typedef struct lfo_module{
   module;
@@ -20,9 +21,11 @@ static int32_t sine(int time, int amp, int per){
   }
 
 static int32_t triangle(int time, int amp, int per){
+  return 0;
   }
 
 static int32_t sawtooth(int time, int amp, int per){
+  return 0;
   }
 
 static void tick(module *_m, int elapsed){
