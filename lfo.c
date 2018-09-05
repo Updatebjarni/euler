@@ -10,28 +10,42 @@ typedef struct lfo_module{
   int time;
   }lfo_module;
 
-
-
 static int32_t square(int time, int amp, int duty, int per){
   return (time%per<duty) ? amp:-amp;
+  }
+
+static int32_t sine(int time, int amp, int per){
+  return 0;
   }
 
 static void tick(module *_m, int elapsed){
   lfo_module *m=(lfo_module *)_m;
   struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
  
-  if(in->frequency.connection && in->amplitude.connection){
+  if(in->frequency.connection && in->amplitude.connection && in->waveform.connection){
     int32_t frequency=(in->frequency.connection->out_terminal.value.int32);
     int32_t amplitude=(in->amplitude.connection->out_terminal.value.int32);
+    int32_t waveform=(in->waveform.connection->out_terminal.value.int32);
 
+    // Rewrite the following
     int32_t length = 1000000/frequency;
-    int32_t value = square(m->time, amplitude, length/2, length);
+    int32_t value = 0;
 
+    switch(wavform) {
+      case 0:
+        value = square(m->time, amplitude, length/2, length);
+        break;
+      case 1:
+        value = sine(m->time, amplitude, length);
+        break;
+      default:
+        value = square(m->time, amplitude, length/2, length);
+      }
+    
     m->time+=elapsed;
     m->output.out_terminal.value.int32=value;
     }
   }
-
 
 class lfo_class;
 
