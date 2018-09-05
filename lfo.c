@@ -15,7 +15,8 @@ static int32_t square(int time, int amp, int duty, int per){
   }
 
 static int32_t sine(int time, int amp, int per){
-  return 0;
+  double tau = 2 * M_PI;
+  return amp*sin(tau/per);
   }
 
 static void tick(module *_m, int elapsed){
