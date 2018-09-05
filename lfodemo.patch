@@ -26,7 +26,7 @@ connect lfo-1 add-3/control
 
 set lfo-1/frequency 10000
 set lfo-1/amplitude 60000000
-set lfo-1/waveform 0
+set lfo-1/waveform 3
 
 set sid/chip[0]/vol 15
 set sid/chip[0]/voice[0]/saw 1
