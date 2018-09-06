@@ -17,7 +17,7 @@ static int32_t square(int time, int amp, int duty, int per){
   }
 
 static int32_t sine(int time, int amp, int per){
-  return amp*sin((2.0*M_PI)/per);
+  return amp*sin((2.0*M_PI*time)/per);
   }
 
 static int32_t triangle(int time, int amp, int per){
