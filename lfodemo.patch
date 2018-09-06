@@ -3,10 +3,10 @@ create add
 create lfo
 
 set lfo-1/frequency 10000
-set lfo-1/amplitude 60000000
+set lfo-1/amplitude 134217728
 set lfo-1/waveform 3
 
-set add-1/signal 1300000
+set add-1/signal 805306368
 set sid/chip[0]/voice[0]/gate 1
 
 connect add-1 sid/chip[0]/voice[0]/pitch
