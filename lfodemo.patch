@@ -2,17 +2,18 @@ create sid
 create add
 create lfo
 
-set lfo-1/frequency 10000
-set lfo-1/amplitude 134217728
-set lfo-1/waveform 3
+set lfo-1/frequency 1000
+set lfo-1/amplitude 634217728
+set lfo-1/waveform 0
 
-set add-1/signal 805306368
+set add-1/signal 0
 set sid/chip[0]/voice[0]/gate 1
 
-connect add-1 sid/chip[0]/voice[0]/pitch
+connect add-1 sid/chip[0]/voice[0]/pw
 connect lfo-1 add-1/control
 
 set sid/chip[0]/vol 15
+set sid/chip[0]/voice[0]/pitch 205306368
 set sid/chip[0]/voice[0]/saw 1
 set sid/chip[0]/voice[0]/attack 0
 set sid/chip[0]/voice[0]/decay 4
