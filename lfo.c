@@ -25,7 +25,7 @@ static int32_t triangle(int time, int amp, int per){
   }
 
 static int32_t sawtooth(int time, int amp, int per){
-  return 0;
+  return -amp + (time % per) * (2.0*amp)/per;
   }
 
 static void tick(module *_m, int elapsed){

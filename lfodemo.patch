@@ -4,7 +4,7 @@ create lfo
 
 set lfo-1/frequency 100
 set lfo-1/amplitude 1024
-set lfo-1/waveform 0
+set lfo-1/waveform 2
 
 set add-1/signal 2048
 set sid/chip[0]/voice[0]/gate 1
