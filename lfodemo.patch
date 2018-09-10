@@ -14,14 +14,11 @@ connect prio-1/monophone[1]/gate sid/chip[0]/voice[1]/gate
 connect prio-1/monophone[2]/pitch add-3/signal
 connect prio-1/monophone[2]/gate sid/chip[0]/voice[2]/gate 
 
-connect add-1 sid/chip[1]/voice[0]/pitch
-connect add-2 sid/chip[1]/voice[1]/pitch
-connect add-3 sid/chip[1]/voice[2]/pitch
-connect lfo-1 add-1/signal
+connect add-1 sid/chip[0]/voice[0]/pitch
+connect add-2 sid/chip[0]/voice[1]/pitch
+connect add-3 sid/chip[0]/voice[2]/pitch
 connect lfo-1 add-1/control
-connect lfo-1 add-2/signal
 connect lfo-1 add-2/control
-connect lfo-1 add-3/signal
 connect lfo-1 add-3/control
 
 set lfo-1/frequency 10000

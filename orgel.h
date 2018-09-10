@@ -76,6 +76,7 @@ struct module{
   jack input;
   jack output;
   int last_updated;
+  void (*debug)(module *);
   };
 
 typedef struct class{
@@ -87,6 +88,7 @@ typedef struct class{
   int is_static;
   module *(*create)(char **);
   int create_counter;
+  void (*default_debug)(module *);
   }class;
 
 void run_cmdline(char *line);
@@ -102,6 +104,9 @@ module *create_module(char *class_name, char **argv);
 jack *find_jack(char *path, int dir);
 int is_terminal(jack *);
 int connect_jacks(jack *out, jack *in);
+int disconnect_input(jack *input);
+int disconnect_output(jack *_output);
+int disconnect_tree(jack *tree);
 int create_jack(jack *to, jack *template, int dir, module *m);
 void show_jack(jack *j, int dir, int indent);
 
@@ -124,6 +129,12 @@ extern int modules_lock;
         __atomic_exchange_n(&modules_lock, 1, __ATOMIC_SEQ_CST)
 #define LOCK_MODULES() while(TRY_LOCK_MODULES());
 #define UNLOCK_MODULES() __atomic_store_n(&modules_lock, 0, __ATOMIC_SEQ_CST)
+
+extern int hardware_lock;
+#define TRY_LOCK_HARDWARE() \
+        __atomic_exchange_n(&hardware_lock, 1, __ATOMIC_SEQ_CST)
+#define LOCK_HARDWARE() while(TRY_LOCK_HARDWARE());
+#define UNLOCK_HARDWARE() __atomic_store_n(&hardware_lock, 0, __ATOMIC_SEQ_CST)
 
 int mog_grab_key();
 

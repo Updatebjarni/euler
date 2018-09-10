@@ -25,6 +25,8 @@ void cmd_j(char **);
 
 void cmd_run(char **);
 extern const char help_run[];
+void cmd_stop(char **);
+extern const char help_stop[];
 void cmd_connect(char **);
 extern const char help_connect[];
 void cmd_set(char **);
@@ -32,6 +34,10 @@ const char help_set[]="Set an input to a constant value.\n"
                       "Usage: set <input jack> <value>\n";
 void cmd_load(char **);
 const char help_load[]="Executes commands from a file.\n";
+void cmd_echo(char **);
+const char help_echo[]="Prints a message to the terminal.\n";
+void cmd_debug(char **);
+extern const char help_debug[];
 
 struct command commands[]={
   {"quit", cmd_quit, help_quit},
@@ -50,7 +56,9 @@ struct command commands[]={
   {"connect", cmd_connect, help_connect},
   {"con", cmd_connect, help_connect},
   {"set", cmd_set, help_set},
-  {"load", cmd_load, help_load}
+  {"load", cmd_load, help_load},
+  {"echo", cmd_echo, help_echo},
+  {"debug", cmd_debug, help_debug}
   };
 
 int ncommands=sizeof(commands)/sizeof(commands[0]);
@@ -65,6 +73,11 @@ void cmd_quit(char **cmdline){
   }
 
 const char help_quit[]="Quits the program.\n";
+
+void cmd_echo(char **argv){
+  while(*++argv){printf("%s ", *argv);}
+  putchar('\n');
+  }
 
 char **tokenise(char *str, char *sep){
   int i=0;

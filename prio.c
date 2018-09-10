@@ -3,80 +3,137 @@
 
 #include"prio.spec.c"
 
-enum{LEFT_PRIO, RIGHT_PRIO, LAST_PRIO, FIRST_PRIO};
-enum{ALLOC_NEXT, ALLOC_RR};
+enum{PRIO_LEFT, PRIO_RIGHT, PRIO_FIRST, PRIO_LAST, PRIO_STACK};
+enum{ALLOC_FIRST, ALLOC_RR};
 
 typedef struct prio_module{
   module;
   int prio, alloc;
-  int held[10], nheld;
-  int polyphony;
-struct{int note, voice;}playing[3];
+  struct{int key, voice, changed;}held[256];
+  int nheld;
+  int *voices;
+  int nvoices, nplaying;
   }prio_module;
-
+ 
 static void tick(module *_m, int elapsed){
   prio_module *m=(prio_module *)_m;
   if(m->input.in_terminal.connection){
     jack_value *v=&(m->input.in_terminal.connection->out_terminal.value);
     for(int i=0; i<v->key_events.len; ++i){
+      int key=v->key_events.buf[i].key;
       if(v->key_events.buf[i].state==KEY_DOWN){
-int voice=m->playing[0].voice;
-m->playing[0]=m->playing[1];
-m->playing[1]=m->playing[2];
-m->playing[2].voice=voice;
-m->playing[2].note=v->key_events.buf[i].key;
-((struct output_bundle *)m->output.bundle.elements)->monophone[voice].bundle
-                          ->pitch.int32=v->key_events.buf[i].key*HALFNOTE;
-((struct output_bundle *)m->output.bundle.elements)->monophone[voice].bundle
-                          ->gate.bool=1;
-
-       m->held[m->nheld]=v->key_events.buf[i].key;
+        int ins=0;
+        switch(m->prio){
+          case PRIO_LEFT:
+            for(ins=0; ins<m->nheld && key>m->held[ins].key; ++ins);
+            break;
+          case PRIO_RIGHT:
+            for(ins=0; ins<m->nheld && key<m->held[ins].key; ++ins);
+          case PRIO_FIRST:
+            ins=m->nheld;
+            break;
+          case PRIO_LAST:
+          case PRIO_STACK:
+            ins=0;
+            break;
+          }
+        for(int j=m->nheld; j>ins; --j)
+          m->held[j]=m->held[j-1];
+        m->held[ins].key=key;
+        if(ins<m->nvoices){
+          if(m->nplaying<m->nvoices){
+            int next=m->nvoices-m->nplaying-1;
+            m->held[ins].voice=m->voices[next];
+            ++(m->nplaying);
+            }
+          else
+            m->held[ins].voice=m->held[m->nvoices].voice;
+          m->held[ins].changed=1;
+          }
+        else
+          m->held[ins].voice=-1;
         ++(m->nheld);
         }
       else{
-for(int n=0; n<3; ++n){
-  if(m->playing[n].note==v->key_events.buf[i].key){
-    int voice=m->playing[n].voice;
-    for(int x=n; x>0; --x)m->playing[x]=m->playing[x-1];
-    m->playing[0].voice=voice; m->playing[0].note=-1;
-    ((struct output_bundle *)m->output.bundle.elements)->monophone[voice].bundle
-                              ->gate.bool=0;
-    break;
-    }
-  }
-        int j=0;
-        for(int k=0; k<m->nheld; ++k)
-          if(v->key_events.buf[i].key!=m->held[k]){
-            m->held[j]=m->held[k];
-            ++j;
+        int del;
+        for(del=0; del<m->nheld && key!=m->held[del].key; ++del);
+        if(del<m->nheld){
+          int freed=m->held[del].voice;
+          for(int j=del; j<m->nheld-1; ++j)
+            m->held[j]=m->held[j+1];
+          --(m->nheld);
+          if(del<m->nplaying){
+            if((m->nheld >= m->nvoices) && (m->prio!=PRIO_LAST)){
+              m->held[m->nvoices-1].voice=freed;
+              m->held[m->nvoices-1].changed=1;
+              }
+            else{
+              m->voices[m->nvoices-m->nplaying]=freed; // *** alloc first vs rr
+              --(m->nplaying);
+              }
             }
-        m->nheld=j;
+          }
         }
       }
-for(int n=0; n<3; ++n){
-    ((struct output_bundle *)m->output.bundle.elements)->monophone[n].bundle
-                              ->_pitch.element.out_terminal.changed=1;
-    ((struct output_bundle *)m->output.bundle.elements)->monophone[n].bundle
-                              ->_gate.element.out_terminal.changed=1;
-  }
-    if(m->nheld){
-
+    struct output_bundle *out=
+      (struct output_bundle *)m->output.bundle.elements;
+    for(int i=0; i<m->nplaying && i<m->nheld; ++i){
+      if(m->held[i].changed){
+        int voice=m->held[i].voice;
+        out->monophone[voice].bundle->pitch.int32=m->held[i].key*HALFNOTE;
+        out->monophone[voice].bundle->_pitch.element.out_terminal.changed=1;
+        out->monophone[voice].bundle->gate.bool=1;
+        out->monophone[voice].bundle->_gate.element.out_terminal.changed=1;
+        }
+      }
+    for(int i=0; i<(m->nvoices-m->nplaying); ++i){
+      int voice=m->voices[i];
+      out->monophone[voice].bundle->gate.bool=0;
+      out->monophone[voice].bundle->_gate.element.out_terminal.changed=1;
       }
     }
   }
 
-static void config(module *m, char **argv){
+static void config(module *_m, char **argv){
+  prio_module *m=(prio_module *)_m;
+  struct output_bundle *out=(struct output_bundle *)m->output.bundle.elements;
   int n;
   if(!argv[0]){
-    printf("Use 'config prio notes=n' to configure for n notes.\n");
+    printf("Use 'config prio voices=n' to configure for n voices.\n");
     return;
     }
-  if(sscanf(argv[0], "notes=%d", &n)!=1){
+  if(sscanf(argv[0], "voices=%d", &n)!=1){
     printf("Unknown parameter \"%s\".\n", argv[0]);
     return;
     }
   LOCK_MODULES();
+  m->nvoices=n;
+  m->voices=realloc(m->voices, sizeof(int)*n);
+  for(int i=0; i<n; ++i)
+    m->voices[i]=i;
+  for(int i=0; i<out->_monophone.element.array.len; ++i)
+    disconnect_tree(out->_monophone.element.array.elements+i);
+  out->_monophone.element.array.len=n;
+// *** This might move the array and break the pointers pointing
+//     here from the inputs:
+  out->monophone=realloc(out->monophone, sizeof(out->monophone[0])*n);
+  for(int i=0; i<n; ++i)
+    create_jack((jack *)(out->monophone+i),
+                (jack *)(&output_monophone_template), DIR_OUT, m);
   UNLOCK_MODULES();
+  }
+
+static void debug(module *_m){
+  prio_module *m=(prio_module *)_m;
+  printf("Held: [ ");
+  for(int i=0; i<m->nheld; ++i)
+    printf("k%d,v%d,c%d ",
+           m->held[i].key, m->held[i].voice, m->held[i].changed);
+  printf("]\nPlaying: %d\n", m->nplaying);
+  printf("Voices: ");
+  for(int i=0; i<(m->nvoices-m->nplaying); ++i)
+    printf("%d ", m->voices[i]);
+  printf("\n");
   }
 
 class prio_class;
@@ -86,11 +143,14 @@ static module *create(char **argv){
 
   m=malloc(sizeof(prio_module));
   default_module_init((module *)m, &prio_class);
-  m->prio=LEFT_PRIO;
+  m->prio=PRIO_LAST;
   m->alloc=ALLOC_RR;
-  m->polyphony=1;
   m->nheld=0;
-for(int i=0; i<3; ++i){m->playing[i].note=-1; m->playing[i].voice=i;}
+  m->nvoices=1;
+  m->nplaying=0;
+  m->voices=malloc(sizeof(int)*m->nvoices);
+  for(int i=0; i<m->nvoices; ++i)
+    m->voices[i]=i;
   return (module *)m;
   }
 
@@ -100,5 +160,6 @@ class prio_class={
   tick, 0, config,
   DYNAMIC_CLASS,
   create,
-  0
+  0,
+  debug
   };

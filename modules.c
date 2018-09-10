@@ -27,6 +27,22 @@ module *find_module(char *name){
   return 0;
   }
 
+const char help_debug[]="Print some internal state useful for debugging.\n"
+                        "Usage: debug <module>\n";
+
+void cmd_debug(char **argv){
+  if(!argv[1]){
+    printf("No module name given.\n");
+    return;
+    }
+  module *m=find_module(argv[1]);
+  if(!m){
+    printf("Not found.\n");
+    return;
+    }
+  m->debug(m);
+  }
+
 const char help_lsmod[]="Lists all loaded modules.\n";
 
 void cmd_lsmod(char **cmdline){
@@ -59,6 +75,7 @@ void default_module_init(module *m, class *c){
   m->tick=c->default_tick;
   m->destroy=c->default_destroy;
   m->config=c->default_config;
+  m->debug=c->default_debug;
   if(c->default_input)
     create_jack(&m->input, c->default_input, DIR_IN, m);
   else
@@ -152,6 +169,15 @@ void stop_module(module *m){
       }
   }
 
+const char help_stop[]="Stop a module, so that it is no longer running.\n"
+                       "Usage: stop <module>\n";
+
+void cmd_stop(char **argv){
+  module *m=find_module(argv[1]);
+  if(!m){printf("not found\n"); return;}
+  stop_module(m);
+  }
+
 static volatile int quit;
 static int oddeven;
 
@@ -188,10 +214,13 @@ static void *rt_thread(void *data){
     if(quit)return 0;
 
     if(!TRY_LOCK_MODULES()){
-      for(int i=0; i<nrunning; ++i){
-        jack_depend(&(running[i]->input));
-        running[i]->tick(running[i], 1);
-        running[i]->last_updated=oddeven;
+      if(!TRY_LOCK_HARDWARE()){
+        for(int i=0; i<nrunning; ++i){
+          jack_depend(&(running[i]->input));
+          running[i]->tick(running[i], 1);
+          running[i]->last_updated=oddeven;
+          }
+        UNLOCK_HARDWARE();
         }
       UNLOCK_MODULES();
       }
