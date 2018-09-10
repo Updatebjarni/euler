@@ -6,7 +6,7 @@ MODOBJS := $(patsubst %,%.o,$(MODULES))
 euler-demo: all_modules.c main.o modules.o jacks.o commands.o $(MODOBJS)
 	gcc ${CFLAGS} -o euler-demo main.o modules.o jacks.o commands.o \
 	    $(MODOBJS) \
-	    -lpthread -lreadline -ltermcap -lm
+	    -lpthread -lreadline -ltermcap -lm -lmcheck
 
 .PHONY: all_modules.c
 all_modules.c:

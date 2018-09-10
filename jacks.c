@@ -112,11 +112,62 @@ int is_terminal(jack *j){
   return 1;
   }
 
+/*** Must be run only with modules locked ***/
+int disconnect_input(jack *input){
+  out_terminal *output;
+  if(!is_terminal(input))return 1;
+  output=(out_terminal *)input->in_terminal.connection;
+  input->in_terminal.connection=0;
+  int i;
+  for(i=output->nconnections; output->connections[i]!=input; ++i);
+  output->connections[i]=output->connections[output->nconnections-1];
+  --(output->nconnections);
+  return 0;
+  }
+
+/*** Must be run only with modules locked ***/
+int disconnect_output(jack *_output){
+  if(!is_terminal(_output))return 1;
+  struct out_terminal *output=(struct out_terminal *)_output;
+  for(int i=0; i<output->nconnections; ++i)
+    ((struct in_terminal *)output->connections[i])->connection=0;
+  free(output->connections);
+  output->connections=0;
+  output->nconnections=0;
+  return 0;
+  }
+
+/*** Must be run only with modules locked ***/
+int disconnect_tree(jack *tree){
+  switch(tree->type){
+    case TYPE_ARRAY:
+      for(int i=0; i<tree->array.len; ++i)
+        if(is_terminal(tree->array.elements+i))
+          disconnect_output(tree->array.elements+i);
+        else
+          disconnect_tree(tree->array.elements+i);
+      break;
+    case TYPE_BUNDLE:
+      for(int i=0; i<tree->bundle.len; ++i)
+        if(is_terminal((jack *)(tree->bundle.elements+i)))
+          disconnect_output((jack *)(tree->bundle.elements+i));
+        else
+          disconnect_tree((jack *)(tree->bundle.elements+i));
+      break;
+    default:
+      disconnect_output(tree);
+    }
+  return 0;
+  }
+
+/*** Must be run only with modules locked ***/
 int connect_jacks(jack *output, jack *input){
   if(!is_terminal(output) || !is_terminal(input))return 1;
-  if(input->in_terminal.connection)return 1;
+  if(input->in_terminal.connection){
+    disconnect_input(input);
+    printf("(removed previous connection)\n");
+    }
   if(output->type != input->type)return 1;
-  LOCK_MODULES();
   output->out_terminal.connections=realloc(
     output->out_terminal.connections,
     sizeof(jack *)*(output->out_terminal.nconnections+1)
@@ -124,7 +175,6 @@ int connect_jacks(jack *output, jack *input){
   output->out_terminal.connections[output->out_terminal.nconnections]=input;
   ++(output->out_terminal.nconnections);
   input->in_terminal.connection=output;
-  UNLOCK_MODULES();
   return 0;
   }
 
@@ -147,6 +197,8 @@ void cmd_connect(char **argv){
 printf("(to be connected to %s)\n", argv[1]);
     return;
     }
+  LOCK_MODULES();
   if(connect_jacks(out, in))
     printf("Connection failed.\n");
+  UNLOCK_MODULES();
   }

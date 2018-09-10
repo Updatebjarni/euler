@@ -102,7 +102,7 @@ class sid_class;
 static module *create(char **argv){
   module *m=malloc(sizeof(module));
   default_module_init(m, &sid_class);
-  LOCK_MODULES();
+  LOCK_HARDWARE();
   SELECT_MODULE(1);
   write_chip(7, 0, 0x00);
   for(int chip=0; chip<3; ++chip){
@@ -114,7 +114,7 @@ static module *create(char **argv){
       write_voice(chip, voice, REG_CTRL, 0x00);
       }
     }
-  UNLOCK_MODULES();
+  UNLOCK_HARDWARE();
   return m;
   }
 
