@@ -45,3 +45,6 @@ jackspec
 
 # C source generated from .spec files by jackspec
 *.spec.c
+
+# C source generated from module list
+all_modules.c
