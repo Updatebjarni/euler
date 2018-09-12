@@ -9,23 +9,30 @@
 
 typedef struct sdelay_module{
   module;
-  int ticks; // Number of ticks delay
+  int maxticks;
   int32_t *signal;
   }sdelay_module;
 
 static void tick(module *_m, int elapsed){
   sdelay_module *m=(sdelay_module *)_m;
   struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
-  if(in->signal.connection){
-    int32_t signal=(in->signal.connection->out_terminal.value.bool);
-  
-    for (int i=m->ticks; i>0; i--){
+  if(in->signal.connection && in->delay.connection){
+    int32_t delay=(in->delay.connection->out_terminal.value.int32);
+    int32_t signal=(in->signal.connection->out_terminal.value.int32);
+
+    if (delay > m->maxticks)
+      delay = m->maxticks;
+
+    if (delay < 0)
+      delay = 0;
+                   
+    for (int i=delay; i>0; i--){
       m->signal[i]=m->signal[i-1];
       }
 
     m->signal[0]=signal;
     
-    m->output.out_terminal.value.bool=m->signal[m->ticks];
+    m->output.out_terminal.value.bool=m->signal[delay];
     }
   }
 
@@ -36,9 +43,8 @@ static module *create(char **argv){
 
   m=malloc(sizeof(sdelay_module));
   default_module_init((module *)m, &sdelay_class);
-  m->ticks=1000;
-  m->signal=malloc(sizeof(int32_t)*1000*2);
-  // Maximum delay is currently hard coded
+  m->maxticks=10000;
+  m->signal=malloc(sizeof(int32_t)*m->maxticks);
   for (int i = 0; i<1000*2; i++){
     m->signal[i]=0;
     }

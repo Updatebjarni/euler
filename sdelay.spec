@@ -3,4 +3,4 @@ in {
   delay: int32
   }
 
-out bool
+out int32

@@ -9,23 +9,30 @@
 
 typedef struct gdelay_module{
   module;
-  int ticks; // Number of ticks delay
+  int maxticks; // Number of ticks delay
   int32_t *gate;
   }gdelay_module;
 
 static void tick(module *_m, int elapsed){
   gdelay_module *m=(gdelay_module *)_m;
   struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
-  if(in->gate.connection){
+  if(in->gate.connection && in->delay.connection){
     int32_t gate=(in->gate.connection->out_terminal.value.bool);
-  
-    for (int i=m->ticks; i>0; i--){
+    int32_t delay=(in->delay.connection->out_terminal.value.int32);
+
+    if (delay > m->maxticks)
+      delay = m->maxticks;
+
+    if (delay < 0)
+      delay = 0;
+    
+    for (int i=delay; i>0; i--){
       m->gate[i]=m->gate[i-1];
       }
 
     m->gate[0]=gate;
     
-    m->output.out_terminal.value.bool=m->gate[m->ticks];
+    m->output.out_terminal.value.bool=m->gate[delay];
     }
   }
 
@@ -36,9 +43,8 @@ static module *create(char **argv){
 
   m=malloc(sizeof(gdelay_module));
   default_module_init((module *)m, &gdelay_class);
-  m->ticks=1000;
-  m->gate=malloc(sizeof(int32_t)*1000*2);
-  // Maximum delay is currently hard coded
+  m->maxticks=10000;
+  m->gate=malloc(sizeof(int32_t)*m->maxticks);
   for (int i = 0; i<1000*2; i++){
     m->gate[i]=0;
     }
@@ -47,7 +53,7 @@ static module *create(char **argv){
 
 class gdelay_class={
   "gdelay",                     // char *name
-  "Gate signal delay",          // char *descr
+  "Gate delay",          // char *descr
   &input,                    // jack *default_input
   &output,                   // jack *default_output
   tick,                      // void (*default_tick)(module *, int elapsed)
