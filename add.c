@@ -6,14 +6,12 @@
 
 
 static void tick(module *m, int elapsed){
-  struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
-
-  if(in->signal.connection && in->control.connection){
-    int64_t result=(int64_t)(in->signal.connection->out_terminal.value.int32);
-    result+=in->control.connection->out_terminal.value.int32;
+  if(INPUT(m)->signal.connection && INPUT(m)->control.connection){
+    int64_t result=(int64_t)(INPUT(m)->signal.connection->value);
+    result+=INPUT(m)->control.connection->value;
     if(result>INT32_MAX)result=INT32_MAX;
     if(result<INT32_MIN)result=INT32_MIN;
-    m->output.out_terminal.value.int32=result;
+    OUTPUT(m).int32_value=result;
     }
   }
 

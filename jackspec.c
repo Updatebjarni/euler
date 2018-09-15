@@ -16,6 +16,16 @@ static int dir;
 static char **path;
 static int pathlen;
 
+char *jack_value_spec(int type){
+  switch(type){
+    case TYPE_BOOL: return "int";
+    case TYPE_INT32: return "long";
+    case TYPE_KEY_EVENTS: return "struct{int len; key_event *buf;}";
+    default: break;
+    }
+  return 0;
+  }
+
 int is_terminal(jack *j){
   if(j->type==TYPE_BUNDLE || j->type==TYPE_ARRAY)return 0;
   return 1;
@@ -46,18 +56,18 @@ char *jackstr(jack *j, char *name){
     case TYPE_KEY_EVENTS:
       if(dir==DIR_IN)return strdup("{.type=TYPE_KEY_EVENTS}");
       asprintf(&str, "{.type=TYPE_KEY_EVENTS, "
-                      ".out_terminal.value.key_events.len=%d}",
-                     j->out_terminal.value.key_events.len);
+                      ".out_terminal.key_events_value.len=%d}",
+                     j->out_terminal.key_events_value.len);
       return str;
     case TYPE_ARRAY:
-      asprintf(&str, "{.type=TYPE_ARRAY,"
-                     " .array={.len=%d, .elements=(jack *)&%s_template}}",
-               j->array.len, pathstr(name));
+      asprintf(&str, "{.type=TYPE_ARRAY, .len=%d,"
+                     " .array=(jack *)&%s_template}",
+               j->len, pathstr(name));
       return str;
     case TYPE_BUNDLE:
-      asprintf(&str, "{.type=TYPE_BUNDLE,"
-                     " .bundle={.len=%d, .elements=(named_jack *)&%s_bundle}}",
-               j->bundle.len, pathstr(name));
+      asprintf(&str, "{.type=TYPE_BUNDLE, .len=%d,"
+                     " .bundle=(named_jack *)&%s_bundle}",
+               j->len, pathstr(name));
       return str;
     }
   return 0;  // Shouldn't happen
@@ -184,7 +194,7 @@ jack *parse_jack(){
       free(j);
       return 0;
       }
-    j->out_terminal.value.key_events.len=n;
+    j->out_terminal.key_events_value.len=n;
     return j;
     }
   if(lex_ws_char('{')){
@@ -199,34 +209,50 @@ jack *parse_jack(){
       ++n;
       }
     j->type=TYPE_BUNDLE;
-    j->bundle.len=n;
-    j->bundle.elements=list;
+    j->len=n;
+    j->bundle=list;
 
     char *s=pathstr(0);
     printf("static struct %s_bundle{\n", s);
     for(int i=0; i<n; ++i){
       if(list[i].element.type==TYPE_BUNDLE)
-        printf("  union{ struct %s_bundle *%s; named_jack _%s;};\n",
-               pathstr(list[i].name), list[i].name, list[i].name);
+        printf("  union{ named_jack _%s; struct %s_bundle *%s; };\n",
+               list[i].name, pathstr(list[i].name), list[i].name);
       else if(list[i].element.type==TYPE_ARRAY){
-        if(is_terminal(list[i].element.array.elements))
-          printf("  union{  union{%s; struct jack;} *%s; "
-                           "named_jack _%s; };\n",
-                 (dir==DIR_IN)?"in_terminal":"jack_value",
-                 list[i].name, list[i].name);
+        if(is_terminal(list[i].element.array))
+          if(dir==DIR_IN)
+            printf("  union{  struct{ struct{ union{"
+                   "struct {%s value;} *connection; struct jack;}ptr;"
+                   " } *ptr; } %s; named_jack _%s; };\n",  // Oh my.
+                   jack_value_spec(list[i].element.array->type),
+                   list[i].name, list[i].name);
+          else
+            printf("  union{  struct{ struct{ "
+                   "union{struct out_terminal; struct jack;}ptr;"
+                   " } *ptr; } %s; named_jack _%s; };\n",
+                   list[i].name, list[i].name);
         else
-          printf("  union{ struct %s_template *%s; named_jack _%s;};\n",
-                 pathstr(list[i].name), list[i].name, list[i].name);
+          printf("  union{ named_jack; struct %s_template *ptr; } %s;\n",
+                 pathstr(list[i].name), list[i].name);
         }
       else
-        printf("  union{%s %s; named_jack _%s;};\n",
-               (dir==DIR_IN)?"in_terminal":"jack_value",
+        if(dir==DIR_IN)
+          printf("  union{ struct{struct{%s value;} *connection;} %s; "
+                 "named_jack _%s;};\n",
+                 jack_value_spec(list[i].element.type),
+                 list[i].name, list[i].name);
+      else
+        printf("  union{struct out_terminal %s; named_jack _%s;};\n",
                list[i].name, list[i].name);
       }
     printf("  }%s_bundle={\n", s);
     for(int i=0; i<n; ++i){
       printf("%s  ", i?",\n":"");
-      printf("._%s={.name=\"%s\", .element=", list[i].name, list[i].name);
+      if(((list[i].element.type==TYPE_ARRAY) &&
+         (list[i].element.array->type==TYPE_BUNDLE)))
+        printf(".%s={.name=\"%s\", .element=", list[i].name, list[i].name);
+      else
+        printf("._%s={.name=\"%s\", .element=", list[i].name, list[i].name);
       char *js=jackstr(&list[i].element, list[i].name);
       printf(js);
       free(js);
@@ -252,17 +278,21 @@ jack *parse_jack(){
     char *ps=pathstr(0), *js=jackstr(e, 0);
     if(e->type==TYPE_BUNDLE)
       printf("static struct %s_template{\n"
-             "  union{struct %s_bundle *bundle; jack j;};\n"
+             "  union{struct %s_bundle *ptr; jack j;};\n"
              "  }%s_template={\n"
              "  .j=%s\n"
              "  };\n", ps, ps, ps, js);
     else
-      printf("static union{ struct %s_terminal; struct jack; } "
-             "%s_template=%s;\n", (dir==DIR_IN)?"in":"out", ps, js);
+      if(dir==DIR_IN)
+        printf("static union{ struct{%s value;} *connection; struct jack; } "
+               "%s_template=%s;\n", jack_value_spec(e->type), ps, js);
+      else
+        printf("static union{ struct out_terminal; struct jack; } "
+               "%s_template=%s;\n", ps, js);
     free(ps); free(js);
     j->type=TYPE_ARRAY;
-    j->array.len=n;
-    j->array.elements=e;
+    j->len=n;
+    j->array=e;
     return j;
     }
 
@@ -343,7 +373,16 @@ int main(int n, char *arg[]){
     if(!(j=parse_jack()))error();
     printf("static jack %s=%s;\n",
            (dir==DIR_IN)?"input":"output", jackstr(j, 0));
+    printf("#define %s(m) ", (dir==DIR_IN)?"INPUT":"OUTPUT");
+    char *name=(dir==DIR_IN)?"in":"out";
+    if(j->type==TYPE_ARRAY)
+      printf("((struct %sput_template *)m->%sput.array)\n", name, name);
+    else if(j->type==TYPE_BUNDLE)
+      printf("((struct %sput_bundle *)m->%sput.bundle)\n", name, name);
+    else
+      printf("(*(struct %s_terminal *)&(m->%sput))\n", name, name);
     }
+  printf("#define INDEX(i) ptr[i].ptr\n");
   fflush(stdout);
 
   asprintf(&cp_cmd, "cp '%s' '%s'", temp_file_name, outfile);

@@ -10,16 +10,16 @@ int create_jack(jack *to, jack *template, int dir, module *m){
   *to=*template;
   switch(template->type){
     case TYPE_ARRAY:
-      to->array.elements=malloc(sizeof(jack[template->array.len]));
-      for(int i=0; i<template->array.len; ++i)
-        create_jack(to->array.elements+i, template->array.elements, dir, m);
+      to->array=malloc(sizeof(jack[template->len]));
+      for(int i=0; i<template->len; ++i)
+        create_jack(to->array+i, template->array, dir, m);
       return 0;
     case TYPE_BUNDLE:
-      to->bundle.elements=malloc(sizeof(named_jack[template->bundle.len]));
-      for(int i=0; i<template->bundle.len; ++i){
-        to->bundle.elements[i].name=template->bundle.elements[i].name;
-        create_jack(&(to->bundle.elements[i].element),
-                    &(template->bundle.elements[i].element), dir, m);
+      to->bundle=malloc(sizeof(named_jack[template->len]));
+      for(int i=0; i<template->len; ++i){
+        to->bundle[i].name=template->bundle[i].name;
+        create_jack(&(to->bundle[i].element),
+                    &(template->bundle[i].element), dir, m);
         }
       return 0;
     default:
@@ -38,8 +38,8 @@ int create_jack(jack *to, jack *template, int dir, module *m){
           case TYPE_INT32:
             return 0;
           case TYPE_KEY_EVENTS:
-            n=template->out_terminal.value.key_events.len;
-            to->out_terminal.value.key_events.buf=malloc(sizeof(key_event[n]));
+            n=template->out_terminal.key_events_value.len;
+            to->out_terminal.key_events_value.buf=malloc(sizeof(key_event[n]));
             return 0;
           default:  // Shouldn't happen
             return 1;
@@ -63,14 +63,14 @@ void show_jack(jack *j, int dir, int indent){
       printf("key_events\n");
       break;
     case TYPE_ARRAY:
-      printf("array(%d) of ", j->array.len);
-      show_jack(j->array.elements, dir, indent);
+      printf("array(%d) of ", j->len);
+      show_jack(j->array, dir, indent);
       break;
     case TYPE_BUNDLE:
       printf("{\n");
-      for(int i=0; i<j->bundle.len; ++i){
-        printf("%*s%s: ", indent+2, "", j->bundle.elements[i].name);
-        show_jack(&(j->bundle.elements[i].element), dir, indent+2);
+      for(int i=0; i<j->len; ++i){
+        printf("%*s%s: ", indent+2, "", j->bundle[i].name);
+        show_jack(&(j->bundle[i].element), dir, indent+2);
         }
       printf("%*s}\n", indent+2, "");
       break;
@@ -80,8 +80,8 @@ void show_jack(jack *j, int dir, int indent){
   }
 
 static jack *lookup(jack *j, char *name){
-  named_jack *elements=j->bundle.elements;
-  for(int i=0; i<j->bundle.len; ++i)
+  named_jack *elements=j->bundle;
+  for(int i=0; i<j->len; ++i)
     if(!strcmp(name, elements[i].name))return &elements[i].element;
   return 0;
   }
@@ -100,8 +100,8 @@ jack *find_jack(char *_pathstr, int dir){
     j=lookup(j, path[i]);
     if(!j)return 0;
     if(array_syntax){
-      if(j->type!=TYPE_ARRAY || j->array.len<=n)return 0;
-      j=j->array.elements+n;
+      if(j->type!=TYPE_ARRAY || j->len<=n)return 0;
+      j=j->array+n;
       }
     }
   return j;
@@ -114,9 +114,9 @@ int is_terminal(jack *j){
 
 /*** Must be run only with modules locked ***/
 int disconnect_input(jack *input){
-  out_terminal *output;
+  struct out_terminal *output;
   if(!is_terminal(input))return 1;
-  output=(out_terminal *)input->in_terminal.connection;
+  output=(struct out_terminal *)input->in_terminal.connection;
   input->in_terminal.connection=0;
   int i;
   for(i=output->nconnections; output->connections[i]!=input; ++i);
@@ -141,18 +141,18 @@ int disconnect_output(jack *_output){
 int disconnect_tree(jack *tree){
   switch(tree->type){
     case TYPE_ARRAY:
-      for(int i=0; i<tree->array.len; ++i)
-        if(is_terminal(tree->array.elements+i))
-          disconnect_output(tree->array.elements+i);
+      for(int i=0; i<tree->len; ++i)
+        if(is_terminal(tree->array+i))
+          disconnect_output(tree->array+i);
         else
-          disconnect_tree(tree->array.elements+i);
+          disconnect_tree(tree->array+i);
       break;
     case TYPE_BUNDLE:
-      for(int i=0; i<tree->bundle.len; ++i)
-        if(is_terminal((jack *)(tree->bundle.elements+i)))
-          disconnect_output((jack *)(tree->bundle.elements+i));
+      for(int i=0; i<tree->len; ++i)
+        if(is_terminal((jack *)(tree->bundle+i)))
+          disconnect_output((jack *)(tree->bundle+i));
         else
-          disconnect_tree((jack *)(tree->bundle.elements+i));
+          disconnect_tree((jack *)(tree->bundle+i));
       break;
     default:
       disconnect_output(tree);

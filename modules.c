@@ -194,13 +194,13 @@ static void jack_depend(jack *j){
     }
   else{
     if(j->type==TYPE_ARRAY){
-      jack *e=j->array.elements;
-      for(int i=0; i<j->array.len; ++i)
+      jack *e=j->array;
+      for(int i=0; i<j->len; ++i)
         jack_depend(e+i);
       }
     else if(j->type==TYPE_BUNDLE){
-      named_jack *e=j->bundle.elements;
-      for(int i=0; i<j->bundle.len; ++i)
+      named_jack *e=j->bundle;
+      for(int i=0; i<j->len; ++i)
         jack_depend(&(e[i].element));
       }
     }

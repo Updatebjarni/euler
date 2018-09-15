@@ -154,9 +154,9 @@ void cmd_set(char **argv){
   else constant=malloc(sizeof(jack));
   constant->type=j->type;
   if(j->type==TYPE_BOOL)
-    constant->out_terminal.value.bool=n;
+    constant->out_terminal.bool_value=n;
   else
-    constant->out_terminal.value.int32=n;
+    constant->out_terminal.int32_value=n;
   constant->out_terminal.parent_module=0;
   constant->out_terminal.changed=1;
   constant->out_terminal.connections=malloc(sizeof(jack *));

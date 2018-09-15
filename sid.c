@@ -36,47 +36,46 @@ static void write_voice(int chip, int voice, int reg, unsigned char val){
 
 static void tick(module *m, int elapsed){
   SELECT_MODULE(1);
-  struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
   for(int chipno=0; chipno<3; ++chipno){
-    if(in->chip[chipno].bundle->vol.connection){
+    if(INPUT(m)->chip.INDEX(chipno)->vol.connection){
       chip[chipno].vol=
-        in->chip[chipno].bundle->vol.connection->out_terminal.value.int32;
+        INPUT(m)->chip.INDEX(chipno)->vol.connection->value;
       }
     for(int voiceno=0; voiceno<3; ++voiceno){
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->pulse.connection)
-        chip[chipno].voice[voiceno].pulse=in->chip[chipno].bundle->voice[voiceno].bundle->pulse.connection->out_terminal.value.bool;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->triangle.connection)
-        chip[chipno].voice[voiceno].triangle=in->chip[chipno].bundle->voice[voiceno].bundle->triangle.connection->out_terminal.value.bool;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->saw.connection)
-        chip[chipno].voice[voiceno].saw=in->chip[chipno].bundle->voice[voiceno].bundle->saw.connection->out_terminal.value.bool;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->noise.connection)
-        chip[chipno].voice[voiceno].noise=in->chip[chipno].bundle->voice[voiceno].bundle->noise.connection->out_terminal.value.bool;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->pw.connection)
-        chip[chipno].voice[voiceno].pw=in->chip[chipno].bundle->voice[voiceno].bundle->pw.connection->out_terminal.value.int32;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->pitch.connection){
-        int pitch=in->chip[chipno].bundle->voice[voiceno].bundle->pitch.connection->out_terminal.value.int32;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->pulse.connection)
+        chip[chipno].voice[voiceno].pulse=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->pulse.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->triangle.connection)
+        chip[chipno].voice[voiceno].triangle=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->triangle.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->saw.connection)
+        chip[chipno].voice[voiceno].saw=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->saw.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->noise.connection)
+        chip[chipno].voice[voiceno].noise=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->noise.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->pw.connection)
+        chip[chipno].voice[voiceno].pw=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->pw.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->pitch.connection){
+        int pitch=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->pitch.connection->value;
         pitch=pow(2, (1.0*pitch)/OCTAVE)*115.25;
         chip[chipno].voice[voiceno].freq=pitch;
         }
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->attack.connection)
-        chip[chipno].voice[voiceno].attack=in->chip[chipno].bundle->voice[voiceno].bundle->attack.connection->out_terminal.value.int32;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->decay.connection)
-        chip[chipno].voice[voiceno].decay=in->chip[chipno].bundle->voice[voiceno].bundle->decay.connection->out_terminal.value.int32;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->sustain.connection)
-        chip[chipno].voice[voiceno].sustain=in->chip[chipno].bundle->voice[voiceno].bundle->sustain.connection->out_terminal.value.int32;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->release.connection)
-        chip[chipno].voice[voiceno].release=in->chip[chipno].bundle->voice[voiceno].bundle->release.connection->out_terminal.value.int32;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->attack.connection)
+        chip[chipno].voice[voiceno].attack=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->attack.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->decay.connection)
+        chip[chipno].voice[voiceno].decay=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->decay.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->sustain.connection)
+        chip[chipno].voice[voiceno].sustain=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->sustain.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->release.connection)
+        chip[chipno].voice[voiceno].release=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->release.connection->value;
 
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->ringmod.connection)
-        chip[chipno].voice[voiceno].ring=in->chip[chipno].bundle->voice[voiceno].bundle->ringmod.connection->out_terminal.value.bool;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->sync.connection)
-        chip[chipno].voice[voiceno].sync=in->chip[chipno].bundle->voice[voiceno].bundle->sync.connection->out_terminal.value.bool;
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->filter.connection){
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->ringmod.connection)
+        chip[chipno].voice[voiceno].ring=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->ringmod.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->sync.connection)
+        chip[chipno].voice[voiceno].sync=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->sync.connection->value;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->filter.connection){
         chip[chipno].filter&=~(1<<voiceno);
-        chip[chipno].filter|=((in->chip[chipno].bundle->voice[voiceno].bundle->filter.connection->out_terminal.value.bool)<<voiceno);
+        chip[chipno].filter|=((INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->filter.connection->value)<<voiceno);
         }
-      if(in->chip[chipno].bundle->voice[voiceno].bundle->gate.connection)
-        chip[chipno].voice[voiceno].gate=in->chip[chipno].bundle->voice[voiceno].bundle->gate.connection->out_terminal.value.bool;
+      if(INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->gate.connection)
+        chip[chipno].voice[voiceno].gate=INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno)->gate.connection->value;
       write_voice(chipno, voiceno, REG_FREQ_LO,
                   chip[chipno].voice[voiceno].freq_lo);
       write_voice(chipno, voiceno, REG_FREQ_HI,
@@ -98,6 +97,25 @@ static void tick(module *m, int elapsed){
   }
 
 class sid_class;
+
+static void debug(module *_m){
+  for(int chipno=0; chipno<3; ++chipno){
+    printf("Chip %d:  MODEVOL=%.2X  RESFILT=%.2X\n",
+           chipno, chip[chipno].modevol, chip[chipno].resfilt);
+    for(int voiceno=0; voiceno<3; ++voiceno){
+      printf("  Voice %d:  AD=%.2X  SR=%.2X  CTRL=%.2X"
+             "  PW=%.2X:%.2X  FREQ=%.2X:%.2X\n",
+             voiceno,
+             chip[chipno].voice[voiceno].ad,
+             chip[chipno].voice[voiceno].sr,
+             chip[chipno].voice[voiceno].ctrl,
+             chip[chipno].voice[voiceno].pw_hi,
+             chip[chipno].voice[voiceno].pw_lo,
+             chip[chipno].voice[voiceno].freq_hi,
+             chip[chipno].voice[voiceno].freq_lo);
+      }
+    }
+  }
 
 static module *create(char **argv){
   module *m=malloc(sizeof(module));
@@ -124,5 +142,6 @@ class sid_class={
   tick, 0, 0,
   STATIC_CLASS,
   create,
-  0
+  0,
+  debug
   };
