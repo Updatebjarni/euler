@@ -23,8 +23,7 @@ void require_orgelperm(int foo){
   }
 
 int main(int argc, char *argv[]){
-  char *line, **toklist=0;
-  HIST_ENTRY *last;
+  char *line;
 
   orgelperm_argv=malloc(sizeof(argv[0])*(argc+2));
   memcpy(orgelperm_argv+1, argv, sizeof(argv[0])*(argc+1));

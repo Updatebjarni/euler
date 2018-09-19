@@ -1,4 +1,7 @@
 in {
+  foo: int32
+  bar: array(10) of int32
+  baz: { bat: int32 }
   chip: array(3) of {
     voice: array(3) of {
       pitch: int32

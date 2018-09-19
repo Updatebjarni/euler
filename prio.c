@@ -18,10 +18,11 @@ typedef struct prio_module{
 static void tick(module *_m, int elapsed){
   prio_module *m=(prio_module *)_m;
   if(m->input.in_terminal.connection){
-    jack_value *v=&(m->input.in_terminal.connection->out_terminal.value);
-    for(int i=0; i<v->key_events.len; ++i){
-      int key=v->key_events.buf[i].key;
-      if(v->key_events.buf[i].state==KEY_DOWN){
+    jack_value *v=(jack_value *)
+      &(INPUT(m).connection->out_terminal.key_events_value);
+    for(int i=0; i<v->key_events_value.len; ++i){
+      int key=v->key_events_value.buf[i].key;
+      if(v->key_events_value.buf[i].state==KEY_DOWN){
         int ins=0;
         switch(m->prio){
           case PRIO_LEFT:
@@ -76,27 +77,26 @@ static void tick(module *_m, int elapsed){
         }
       }
     struct output_bundle *out=
-      (struct output_bundle *)m->output.bundle.elements;
+      (struct output_bundle *)m->output.bundle;
     for(int i=0; i<m->nplaying && i<m->nheld; ++i){
       if(m->held[i].changed){
         int voice=m->held[i].voice;
-        out->monophone[voice].bundle->pitch.int32=m->held[i].key*HALFNOTE;
-        out->monophone[voice].bundle->_pitch.element.out_terminal.changed=1;
-        out->monophone[voice].bundle->gate.bool=1;
-        out->monophone[voice].bundle->_gate.element.out_terminal.changed=1;
+        out->monophone.INDEX(voice)->pitch.int32_value=m->held[i].key*HALFNOTE;
+        out->monophone.INDEX(voice)->pitch.changed=1;
+        out->monophone.INDEX(voice)->gate.bool_value=1;
+        out->monophone.INDEX(voice)->gate.changed=1;
         }
       }
     for(int i=0; i<(m->nvoices-m->nplaying); ++i){
       int voice=m->voices[i];
-      out->monophone[voice].bundle->gate.bool=0;
-      out->monophone[voice].bundle->_gate.element.out_terminal.changed=1;
+      out->monophone.INDEX(voice)->gate.bool_value=0;
+      out->monophone.INDEX(voice)->gate.changed=1;
       }
     }
   }
 
 static void config(module *_m, char **argv){
   prio_module *m=(prio_module *)_m;
-  struct output_bundle *out=(struct output_bundle *)m->output.bundle.elements;
   int n;
   if(!argv[0]){
     printf("Use 'config prio voices=n' to configure for n voices.\n");
@@ -111,14 +111,15 @@ static void config(module *_m, char **argv){
   m->voices=realloc(m->voices, sizeof(int)*n);
   for(int i=0; i<n; ++i)
     m->voices[i]=i;
-  for(int i=0; i<out->_monophone.element.array.len; ++i)
-    disconnect_tree(out->_monophone.element.array.elements+i);
-  out->_monophone.element.array.len=n;
+  for(int i=0; i<OUTPUT(m)->monophone.element.len; ++i)
+    disconnect_tree((jack *)&(OUTPUT(m)->monophone.INDEX(i)));
+  OUTPUT(m)->monophone.element.len=n;
 // *** This might move the array and break the pointers pointing
 //     here from the inputs:
-  out->monophone=realloc(out->monophone, sizeof(out->monophone[0])*n);
+  OUTPUT(m)->monophone.ptr=
+    realloc(OUTPUT(m)->monophone.ptr, sizeof(OUTPUT(m)->monophone.ptr[0])*n);
   for(int i=0; i<n; ++i)
-    create_jack((jack *)(out->monophone+i),
+    create_jack((jack *)(OUTPUT(m)->monophone.ptr+i),
                 (jack *)(&output_monophone_template), DIR_OUT, m);
   UNLOCK_MODULES();
   }

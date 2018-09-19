@@ -32,7 +32,7 @@ volatile struct{char key; char ready;}single_grab;
 
 static void tick(module *m, int elapsed){
   struct output_bundle *output=
-    (struct output_bundle *)m->output.bundle.elements;
+    (struct output_bundle *)m->output.bundle;
 
   if(HEAD.key!=-1){
     if(!--HEAD.timer){
@@ -77,7 +77,7 @@ static void tick(module *m, int elapsed){
       }
     }
 
-  output->right.key_events.len=mog_out_len;
+  output->right.key_events_value.len=mog_out_len;
   current=!current;
   }
 
@@ -119,8 +119,8 @@ static module *create(char **argv){
   module *m=malloc(sizeof(module));
   default_module_init(m, &mog_class);
   struct output_bundle *out=
-    (struct output_bundle *)m->output.bundle.elements;
-  mog_out=out->right.key_events.buf;
+    (struct output_bundle *)m->output.bundle;
+  mog_out=out->right.key_events_value.buf;
   out->_right.element.out_terminal.changed=1;
   read_keys(keybits[!current]);
   return m;

@@ -34,31 +34,32 @@ typedef struct key_event{
   }key_event;
 
 typedef union{
-  long int32;
-  int bool;
-  struct{int len; key_event *buf;}key_events;
+  long int32_value;
+  int bool_value;
+  struct{int len; key_event *buf;}key_events_value;
   }jack_value;
 
 typedef struct named_jack named_jack;
 typedef struct jack jack;
 
-typedef struct out_terminal{
-  jack_value value;
+struct out_terminal{
+  jack_value;
   jack **connections;
   int nconnections;
   module *parent_module;
   int changed;
-  }out_terminal;
+  };//out_terminal;
 
 typedef struct in_terminal{jack *connection;} in_terminal;
 
 struct jack{
   union{
-    struct{named_jack *elements; int len;}bundle;
-    struct{jack *elements; int len;}array;
+    named_jack *bundle;
+    jack *array;
     struct in_terminal in_terminal;
     struct out_terminal out_terminal;
     };
+  int len;
   jack_type type;
   };
 

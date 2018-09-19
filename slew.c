@@ -16,11 +16,10 @@ static int min(int a, int b){
 
 static void tick(module *_m, int elapsed){
   slew_module *m=(slew_module *)_m;
-  struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
- 
-  if(in->signal.connection && in->rate.connection){
-    int32_t signal=(in->signal.connection->out_terminal.value.int32);
-    int32_t rate=(in->rate.connection->out_terminal.value.int32);
+
+  if(INPUT(m)->signal.connection && INPUT(m)->rate.connection){
+    int32_t signal=(INPUT(m)->signal.connection->value);
+    int32_t rate=(INPUT(m)->rate.connection->value);
 
     if (rate < 0) rate=0;
     
@@ -30,7 +29,7 @@ static void tick(module *_m, int elapsed){
     if (m->value < signal)
       m->value+= min(signal - m->value, rate);
 
-    m->output.out_terminal.value.int32=m->value;
+    OUTPUT(m).int32_value=m->value;
     }
   }
 

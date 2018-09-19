@@ -30,11 +30,10 @@ static int32_t sawtooth(int time, int amp, int per){
 
 static void tick(module *_m, int elapsed){
   lfo_module *m=(lfo_module *)_m;
-  struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
-  if(in->frequency.connection && in->amplitude.connection && in->waveform.connection){
-    int32_t frequency=(in->frequency.connection->out_terminal.value.int32);
-    int32_t amplitude=(in->amplitude.connection->out_terminal.value.int32);
-    int32_t waveform=(in->waveform.connection->out_terminal.value.int32);
+  if(INPUT(m)->frequency.connection && INPUT(m)->amplitude.connection && INPUT(m)->waveform.connection){
+    int32_t frequency=(INPUT(m)->frequency.connection->value);
+    int32_t amplitude=(INPUT(m)->amplitude.connection->value);
+    int32_t waveform=(INPUT(m)->waveform.connection->value);
 
     // Rewrite the following
     int32_t length=1000000/frequency;
@@ -55,7 +54,7 @@ static void tick(module *_m, int elapsed){
       }
     
     m->time+=elapsed;
-    m->output.out_terminal.value.int32=value;
+    OUTPUT(m).int32_value=value;
     }
   }
 
