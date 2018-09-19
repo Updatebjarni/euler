@@ -15,10 +15,9 @@ typedef struct sdelay_module{
 
 static void tick(module *_m, int elapsed){
   sdelay_module *m=(sdelay_module *)_m;
-  struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
-  if(in->signal.connection && in->delay.connection){
-    int32_t delay=(in->delay.connection->out_terminal.value.int32);
-    int32_t signal=(in->signal.connection->out_terminal.value.int32);
+  if(INPUT(m)->signal.connection && INPUT(m)->delay.connection){
+    int32_t delay=(INPUT(m)->delay.connection->value);
+    int32_t signal=(INPUT(m)->signal.connection->value);
 
     if (delay > m->maxticks)
       delay = m->maxticks;
@@ -32,7 +31,7 @@ static void tick(module *_m, int elapsed){
 
     m->signal[0]=signal;
     
-    m->output.out_terminal.value.bool=m->signal[delay];
+    OUTPUT(m).int32_value=m->signal[delay];
     }
   }
 

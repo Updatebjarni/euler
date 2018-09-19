@@ -15,10 +15,9 @@ typedef struct gdelay_module{
 
 static void tick(module *_m, int elapsed){
   gdelay_module *m=(gdelay_module *)_m;
-  struct input_bundle *in=(struct input_bundle *)m->input.bundle.elements;
-  if(in->gate.connection && in->delay.connection){
-    int32_t gate=(in->gate.connection->out_terminal.value.bool);
-    int32_t delay=(in->delay.connection->out_terminal.value.int32);
+  if(INPUT(m)->gate.connection && INPUT(m)->delay.connection){
+    int32_t gate=(INPUT(m)->gate.connection->value);
+    int32_t delay=(INPUT(m)->delay.connection->value);
 
     if (delay > m->maxticks)
       delay = m->maxticks;
@@ -32,7 +31,8 @@ static void tick(module *_m, int elapsed){
 
     m->gate[0]=gate;
     
-    m->output.out_terminal.value.bool=m->gate[delay];
+    //m->output.out_terminal.value.bool=m->gate[delay];
+    OUTPUT(m).int32_value=m->gate[delay];
     }
   }
 
