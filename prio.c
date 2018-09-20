@@ -95,6 +95,11 @@ static void tick(module *_m, int elapsed){
     }
   }
 
+static paramspec config_params[]={
+  {"voices", 1, PARAM_NUMBER, .intval=0},
+  {0}
+  };
+
 static void config(module *_m, char **argv){
   prio_module *m=(prio_module *)_m;
   int n;
@@ -102,10 +107,11 @@ static void config(module *_m, char **argv){
     printf("Use 'config prio voices=n' to configure for n voices.\n");
     return;
     }
-  if(sscanf(argv[0], "voices=%d", &n)!=1){
+  if(parse_param(&argv, config_params)!=1){
     printf("Unknown parameter \"%s\".\n", argv[0]);
     return;
     }
+  n=config_params[0].intval;
   LOCK_MODULES();
   m->nvoices=n;
   m->voices=realloc(m->voices, sizeof(int)*n);
@@ -152,6 +158,7 @@ static module *create(char **argv){
   m->voices=malloc(sizeof(int)*m->nvoices);
   for(int i=0; i<m->nvoices; ++i)
     m->voices[i]=i;
+  config((module *)m, argv);
   return (module *)m;
   }
 
