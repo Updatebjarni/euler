@@ -1,11 +1,12 @@
 CFLAGS := -O2 -std=c99 -Wall -fplan9-extensions
 
-MODULES := mog prio na sid add slew lfo gdelay sdelay
+MODULES := mog prio na sid add slew lfo gdelay sdelay keyboard
 MODOBJS := $(patsubst %,%.o,$(MODULES))
 
-euler-demo: all_modules.c main.o modules.o jacks.o commands.o $(MODOBJS)
+euler-demo: all_modules.c main.o modules.o jacks.o commands.o cmdlex.o \
+	    $(MODOBJS)
 	gcc ${CFLAGS} -o euler-demo main.o modules.o jacks.o commands.o \
-	    $(MODOBJS) \
+	    cmdlex.o $(MODOBJS) \
 	    -lpthread -lreadline -ltermcap -lm -lmcheck
 
 .PHONY: all_modules.c
