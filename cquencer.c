@@ -34,7 +34,7 @@ static void tick(module *_m, int elapsed){
       pwl-=ticksperbeat;
       }
 
-    if (pwl < 100)
+    if (pwl < 300)
       gate=1;
     
     OUTPUT(m)->pitch.int32_value=m->pitch[step];
