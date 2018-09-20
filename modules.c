@@ -90,13 +90,11 @@ void default_module_init(module *m, class *c){
   }
 
 void cmd_shutup(char **argv){
-  LOCK_MODULES();
   for(int i=0; i<nmodules; ++i){
+    stop_module(all_modules[i]);
     if(all_modules[i]->type->is_static && all_modules[i]->init)
       all_modules[i]->init(all_modules[i]);
-    stop_module(all_modules[i]);
     }
-  UNLOCK_MODULES();
   }
 
 const char help_shutup[]="Makes the synth modules shut up.\n";
