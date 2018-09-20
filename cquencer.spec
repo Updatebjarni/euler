@@ -1,12 +1,10 @@
 in {
   ticksperbeat: int32
-  data: array(8) of {
-    value: int32
-    beatlength: int32
-    }
   }
 
 out {
-    value: int32
+    pitch: int32
+    value1: int32
+    value2: int32
     gate: bool
   }

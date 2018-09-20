@@ -9,8 +9,16 @@
 
 typedef struct cquencer_module{
   module;
-  int time;
+  int time; // Time since start
+  int32_t *pitch; // Key value
+  int32_t *value1;
+  int32_t *value2;
   }cquencer_module;
+
+static int32_t keytopitch(int key){
+  int32_t base=A440/2/2/2/2;
+  return base+key*HALFNOTE;
+}
 
 static void tick(module *_m, int elapsed){
   cquencer_module *m=(cquencer_module *)_m;
@@ -18,9 +26,23 @@ static void tick(module *_m, int elapsed){
     int32_t ticksperbeat=INPUT(m)->ticksperbeat.connection->value;
     
     m->time+=elapsed;
-    //m->output.out_terminal.value.int32=value;
+    int pwl=m->time%8*ticksperbeat;
+    int step=0;
+    int gate=0;
+    while (pwl>ticksperbeat){
+      step++;
+      pwl-=ticksperbeat;
+      }
+
+    if (pwl < 100)
+      gate=1;
+    
+    OUTPUT(m)->pitch.int32_value=m->pitch[step];
+    OUTPUT(m)->value1.int32_value=m->value1[step];
+    OUTPUT(m)->value2.int32_value=m->value2[step];
+    OUTPUT(m)->gate.bool_value=gate;
     }
-  }
+}
 
 class cquencer_class;
 
@@ -29,6 +51,19 @@ static module *create(char **argv){
   m=malloc(sizeof(cquencer_module));
   default_module_init((module *)m, &cquencer_class);
   m->time=0;
+  m->pitch=malloc(sizeof(int32_t));
+  m->value1=malloc(sizeof(int32_t));
+  m->value2=malloc(sizeof(int32_t));
+  
+  m->pitch[0]=keytopitch(0);
+  m->pitch[0]=keytopitch(12);
+  m->pitch[0]=keytopitch(24);
+  m->pitch[0]=keytopitch(36);
+  m->pitch[0]=keytopitch(0);
+  m->pitch[0]=keytopitch(12);
+  m->pitch[0]=keytopitch(24);
+  m->pitch[0]=keytopitch(36);
+  
   return (module *)m;
   }
 
