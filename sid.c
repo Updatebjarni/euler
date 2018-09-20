@@ -117,9 +117,7 @@ static void debug(module *_m){
     }
   }
 
-static module *create(char **argv){
-  module *m=malloc(sizeof(module));
-  default_module_init(m, &sid_class);
+static void init(module *m){
   LOCK_HARDWARE();
   SELECT_MODULE(1);
   write_chip(7, 0, 0x00);
@@ -133,6 +131,12 @@ static module *create(char **argv){
       }
     }
   UNLOCK_HARDWARE();
+  }
+
+static module *create(char **argv){
+  module *m=malloc(sizeof(module));
+  default_module_init(m, &sid_class);
+  init(m);
   return m;
   }
 
@@ -143,5 +147,7 @@ class sid_class={
   STATIC_CLASS,
   create,
   0,
-  debug
+  debug,
+  0,
+  init
   };

@@ -76,6 +76,8 @@ void default_module_init(module *m, class *c){
   m->destroy=c->default_destroy;
   m->config=c->default_config;
   m->debug=c->default_debug;
+  m->attention=c->default_attention;
+  m->init=c->default_init;
   if(c->default_input)
     create_jack(&m->input, c->default_input, DIR_IN, m);
   else
@@ -86,6 +88,18 @@ void default_module_init(module *m, class *c){
     m->output.type=TYPE_EMPTY;
   m->last_updated=0;
   }
+
+void cmd_shutup(char **argv){
+  LOCK_MODULES();
+  for(int i=0; i<nmodules; ++i){
+    if(all_modules[i]->type->is_static && all_modules[i]->init)
+      all_modules[i]->init(all_modules[i]);
+    stop_module(all_modules[i]);
+    }
+  UNLOCK_MODULES();
+  }
+
+const char help_shutup[]="Makes the synth modules shut up.\n";
 
 module *create_module(char *class_name, char **argv){
   module *m;
@@ -114,32 +128,62 @@ module *create_module(char *class_name, char **argv){
 
 const char help_create[]="Create a new module.\n";
 
-void cmd_create(char **cmdline){
+int parse_parens(char ***argv, char ***paren){
+  char **p=*argv;
+  int parcount;
+  if(strcmp(*p, "("))return -1;
+  parcount=1;
+  do{
+    ++p;
+    if(!*p)return -1;
+    if(!strcmp(*p, ")"))--parcount;
+    else if(!strcmp(*p, "("))++parcount;
+    }while(parcount);
+  free(*p);
+  *p=0;
+  *paren=(*argv)+1;
+  *argv=p+1;
+  return 0;
+  }
+
+void cmd_create(char **argv){
   module *m;
-  char **argv=cmdline+2;
-  if(!cmdline[1]){
-    printf("Usage: create <class-name> [<instance-name>]\n");
+  char *classname=0, *modname=0, **paren=0;
+  ++argv;
+  if(!*argv){
+    printf("Usage: create <class-name(options)> [as <name>]\n");
     return;
     }
-  if(!find_class(cmdline[1])){
-    printf("No such class: %s\n", cmdline[1]);
+  if(!find_class(*argv)){
+    printf("No such class: %s\n", *argv);
     return;
     }
-  if(cmdline[2]){
-    if(find_module(cmdline[2])){
-      printf("Name \"%s\" already exists.\n", cmdline[2]);
+  classname=*argv;
+  ++argv;
+  if(*argv && !strcmp(*argv, "(") && parse_parens(&argv, &paren)==-1)
+    goto syntax_error;
+  if(*argv){
+    if(strcmp(*argv, "as") || !*++argv)goto syntax_error;
+    if(find_module(*argv)){
+      printf("Name \"%s\" already exists.\n", *argv);
       return;
       }
+    modname=*argv;
     ++argv;
     }
-  if(!(m=create_module(cmdline[1], argv))){
-    printf("Failed to create module.\n");
+  if(!(m=create_module(classname, paren))){
+    printf("Failed to create module \"%s\".\n", modname?modname:classname);
     return;
     }
-  if(cmdline[2]){
+  if(modname){
     free(m->name);
-    m->name=strdup(cmdline[2]);
+    m->name=strdup(modname);
     }
+  return;
+
+  syntax_error:
+  printf("Syntax error.\n");
+  return;
   }
 
 void run_module(module *m){
@@ -184,7 +228,7 @@ static int oddeven;
 static void jack_depend(jack *j){
   if((j->type==TYPE_EMPTY) || is_terminal(j)){
     if(!(j->in_terminal.connection))return;
-    module *m=j->in_terminal.connection->out_terminal.parent_module;
+    module *m=j->in_terminal.connection->parent_module;
     if(!m)return;
     if(m->last_updated!=oddeven){
       jack_depend(&(m->input));

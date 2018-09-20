@@ -38,6 +38,8 @@ void cmd_echo(char **);
 const char help_echo[]="Prints a message to the terminal.\n";
 void cmd_debug(char **);
 extern const char help_debug[];
+void cmd_shutup(char **);
+extern const char help_shutup[];
 
 struct command commands[]={
   {"quit", cmd_quit, help_quit},
@@ -58,6 +60,7 @@ struct command commands[]={
   {"set", cmd_set, help_set},
   {"load", cmd_load, help_load},
   {"echo", cmd_echo, help_echo},
+  {"shutup", cmd_shutup, help_shutup},
   {"debug", cmd_debug, help_debug}
   };
 
@@ -92,12 +95,21 @@ char **tokenise(char *str, char *sep){
   }
 
 void run_cmdline(char *line){
-  char **toklist=tokenise(line, " \t");
-  if(!toklist[0])return;
+//  char **toklist=tokenise(line, " \t");
+  char **toklist;
+  int toklist_len;
+
+  toklist_len=cmdlex(&toklist, line);
+
+  if(toklist_len<0)printf("Syntax error.\n");
+  if(toklist_len<1)goto done;
+
   void (*cmdfunc)(char **)=find_command(toklist[0]);
   if(cmdfunc)cmdfunc(toklist);
   else printf("Unknown command: %s\n", toklist[0]);
-  free(toklist);
+
+  done:
+  free_toklist(toklist, toklist_len);
   }
 
 void cmd_load(char **argv){
@@ -145,7 +157,7 @@ void cmd_set(char **argv){
     }
   jack *constant;
   if(j->in_terminal.connection){
-    if(j->in_terminal.connection->out_terminal.parent_module){
+    if(j->in_terminal.connection->parent_module){
       printf("The jack is already connected.\n");
       return;
       }
@@ -157,7 +169,7 @@ void cmd_set(char **argv){
     constant->out_terminal.bool_value=n;
   else
     constant->out_terminal.int32_value=n;
-  constant->out_terminal.parent_module=0;
+  constant->parent_module=0;
   constant->out_terminal.changed=1;
   constant->out_terminal.connections=malloc(sizeof(jack *));
   constant->out_terminal.connections[0]=j;

@@ -36,7 +36,7 @@ typedef struct key_event{
 typedef union{
   long int32_value;
   int bool_value;
-  struct{int len; key_event *buf;}key_events_value;
+  struct{int len; key_event *buf; int bufsize;}key_events_value;
   }jack_value;
 
 typedef struct named_jack named_jack;
@@ -46,7 +46,6 @@ struct out_terminal{
   jack_value;
   jack **connections;
   int nconnections;
-  module *parent_module;
   int changed;
   };//out_terminal;
 
@@ -61,6 +60,8 @@ struct jack{
     };
   int len;
   jack_type type;
+  module *parent_module;
+  void (*attention)(jack *);
   };
 
 struct named_jack{
@@ -78,6 +79,8 @@ struct module{
   jack output;
   int last_updated;
   void (*debug)(module *);
+  void (*attention)(jack *);
+  void (*init)(module *);
   };
 
 typedef struct class{
@@ -90,7 +93,20 @@ typedef struct class{
   module *(*create)(char **);
   int create_counter;
   void (*default_debug)(module *);
+  void (*default_attention)(jack *);
+  void (*default_init)(module *);
   }class;
+
+enum{PARAM_KEY=1, PARAM_CV, PARAM_NUMBER, PARAM_FLAG, PARAM_STRING,
+     PARAM_INPUT, PARAM_OUTPUT, PARAM_MODULE};
+
+typedef struct{
+  char *name;
+  int number, type;
+  union{long intval; char *strval; jack *jackval; module *modval;};
+  }paramspec;
+
+int parse_param(char **argv, paramspec *specs);
 
 void run_cmdline(char *line);
 char **tokenise(char *str, char *sep);
@@ -110,6 +126,11 @@ int disconnect_output(jack *_output);
 int disconnect_tree(jack *tree);
 int create_jack(jack *to, jack *template, int dir, module *m);
 void show_jack(jack *j, int dir, int indent);
+char *notetostr(int note);
+int strtonote(char *s, int *to);
+int strtocv(char *s, long *to);
+void free_toklist(char **toklist, int len);
+int cmdlex(char ***to, char *str);
 
 extern class *all_classes[];
 extern module **loaded_modules;
