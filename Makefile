@@ -1,6 +1,6 @@
 CFLAGS := -O2 -std=c99 -Wall -fplan9-extensions
 
-MODULES := mog prio na sid add slew lfo gdelay sdelay
+MODULES := mog prio na sid add slew lfo gdelay sdelay cquencer
 MODOBJS := $(patsubst %,%.o,$(MODULES))
 
 euler-demo: all_modules.c main.o modules.o jacks.o commands.o $(MODOBJS)
