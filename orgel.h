@@ -12,6 +12,7 @@
 
 #define A440     805306368L
 #define OCTAVE   134217728L
+#define VOLT     OCTAVE
 #define HALFNOTE 11184811L
 
 enum{CONNECTED, DISCONNECTED};
@@ -97,7 +98,7 @@ typedef struct class{
   void (*default_init)(module *);
   }class;
 
-enum{PARAM_KEY=1, PARAM_CV, PARAM_NUMBER, PARAM_FLAG, PARAM_STRING,
+enum{PARAM_KEY, PARAM_CV, PARAM_NUMBER, PARAM_FLAG, PARAM_STRING,
      PARAM_INPUT, PARAM_OUTPUT, PARAM_MODULE};
 
 typedef struct{
@@ -106,7 +107,7 @@ typedef struct{
   union{long intval; char *strval; jack *jackval; module *modval;};
   }paramspec;
 
-int parse_param(char **argv, paramspec *specs);
+int parse_param(char ***argv, paramspec *specs);
 
 void run_cmdline(char *line);
 char **tokenise(char *str, char *sep);

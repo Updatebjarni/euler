@@ -25,7 +25,10 @@ int strtonote(char *s, int *to){
   long note, octave;
   char *p;
 
-  if((!*s) || !(p=strchr(notenames, *s)))return -1;
+  if(!*s)return -1;
+  note=strtol(s, &p, 0);
+  if(!*p){*to=note; return 0;}
+  if(!(p=strchr(notenames, *s)))return -1;
   note=p-notenames; ++s;
   if(*s=='b'){--note; ++s;}
   else if(*s=='#'){++note; ++s;}
@@ -39,20 +42,36 @@ int strtonote(char *s, int *to){
 
 int strtocv(char *s, long *to){
   int note;
+  long n;
+  char *end;
+  double d;
+
+  n=strtol(s, &end, 0);
+  if(!*end){*to=n; return 0;}
+  d=strtod(s, &end);
+  if(end!=s){
+    if(!strcmp(end, "Hz")){
+      *to=log2(d/6.875)*OCTAVE;
+      return 0;
+      }
+    if(!strcmp(end, "V")){
+      *to=d*VOLT;
+      return 0;
+      }
+    return -1;
+    }
   if(strtonote(s, &note))return -1;
   *to=note*HALFNOTE;
   return 0;
   }
 
-/*
-  char *name;
-  int number, type;
-  union{long intval; char *strval; jack *jackval; module *modval;};
-  }paramspec;
-*/
+int parse_param(char ***argv, paramspec *specs){
+  char **p=*argv, *end;
+  int note;
+  long cv, n;
+  jack *j;
+  module *m;
 
-int parse_param(char **argv, paramspec *specs){
-  char **p=argv;
   if(*p && !strcmp(*p, ","))++p;
   if(!*p)return -1;
   for(int i=0; specs[i].name; ++i)
@@ -63,13 +82,62 @@ int parse_param(char **argv, paramspec *specs){
       if(!*p && specs[i].type!=PARAM_FLAG)return -1;
       switch(specs[i].type){
         case PARAM_KEY:
+          if(strtonote(*p, &note))return -1;
+          specs[i].intval=note;
+          *argv=p+1;
+          return specs[i].number;
         case PARAM_CV:
+          if(strtocv(*p, &cv))return -1;
+          specs[i].intval=cv;
+          *argv=p+1;
+          return specs[i].number;
         case PARAM_NUMBER:
+          n=strtol(*p, &end, 0);
+          if(!*end){
+            specs[i].intval=n;
+            *argv=p+1;
+            return specs[i].number;
+            }
+          return -1;
         case PARAM_FLAG:
+          n=strtol(*p, &end, 0);
+          if(!*end && (n==0 || n==1)){
+            specs[i].intval=n;
+            *argv=p+1;
+            return specs[i].number;
+            }
+          if(!strcmp(*p, "true") || !strcmp(*p, "t") ||
+             !strcmp(*p, "on") || !strcmp(*p, "yes")){
+            specs[i].intval=1;
+            *argv=p+1;
+            return specs[i].number;
+            }
+          if(!strcmp(*p, "false") || !strcmp(*p, "nil") ||
+             !strcmp(*p, "off") || !strcmp(*p, "no")){
+            specs[i].intval=0;
+            *argv=p+1;
+            return specs[i].number;
+            }
+          return -1;
         case PARAM_STRING:
+          specs[i].strval=*p;
+          *argv=p+1;
+          return specs[i].number;
         case PARAM_INPUT:
+          if(!(j=find_jack(*p, DIR_IN)))return -1;
+          specs[i].jackval=j;
+          *argv=p+1;
+          return specs[i].number;
         case PARAM_OUTPUT:
+          if(!(j=find_jack(*p, DIR_OUT)))return -1;
+          specs[i].jackval=j;
+          *argv=p+1;
+          return specs[i].number;
         case PARAM_MODULE:
+          if(!(m=find_module(*p)))return -1;
+          specs[i].modval=m;
+          *argv=p+1;
+          return specs[i].number;
         default: return -1;
         }
       }
