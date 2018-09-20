@@ -16,7 +16,7 @@ typedef struct cquencer_module{
   }cquencer_module;
 
 static int32_t keytopitch(int key){
-  int32_t base=A440/2/2/2/2;
+  int32_t base=A440/2/2/2;
   return base+key*HALFNOTE;
 }
 
@@ -34,7 +34,7 @@ static void tick(module *_m, int elapsed){
       pwl-=ticksperbeat;
       }
 
-    if (pwl < 300)
+    if (pwl < 100)
       gate=1;
     
     OUTPUT(m)->pitch.int32_value=m->pitch[step];
