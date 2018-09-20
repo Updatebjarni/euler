@@ -103,8 +103,8 @@ static paramspec config_params[]={
 static void config(module *_m, char **argv){
   prio_module *m=(prio_module *)_m;
   int n;
-  if(!argv[0]){
-    printf("Use 'config prio voices=n' to configure for n voices.\n");
+  if(!argv || !argv[0]){
+    printf("Use 'config prio(voices=n)' to configure for n voices.\n");
     return;
     }
   if(parse_param(&argv, config_params)!=1){

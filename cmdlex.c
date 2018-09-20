@@ -73,6 +73,7 @@ int parse_param(char ***argv, paramspec *specs){
   jack *j;
   module *m;
 
+  if(!p)return -1;
   if(*p && !strcmp(*p, ","))++p;
   if(!*p)return -1;
   for(int i=0; specs[i].name; ++i)
