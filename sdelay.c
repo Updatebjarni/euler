@@ -31,11 +31,7 @@ static void tick(module *_m, int elapsed){
 
     m->signal[0]=signal;
     
-<<<<<<< HEAD
-    OUTPUT(m).bool_value=m->signal[delay];
-=======
     OUTPUT(m).int32_value=m->signal[delay];
->>>>>>> a31e99f86c5875391d495e648b6ebd557c7f29cf
     }
   }
 
