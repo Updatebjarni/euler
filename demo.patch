@@ -1,6 +1,6 @@
 create prio
 config prio-1 voices=3
-connect mog/right prio-1
+connect mog/lower prio-1
 create sid
 connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate 

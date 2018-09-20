@@ -31,9 +31,6 @@ static void read_keys(unsigned short *buf){
 volatile struct{char key; char ready;}single_grab;
 
 static void tick(module *m, int elapsed){
-  struct output_bundle *output=
-    (struct output_bundle *)m->output.bundle;
-
   if(HEAD.key!=-1){
     if(!--HEAD.timer){
       bouncemask[HEAD.key/12]&=~(1<<(HEAD.key%12));
@@ -77,7 +74,7 @@ static void tick(module *m, int elapsed){
       }
     }
 
-  output->right.key_events_value.len=mog_out_len;
+  OUTPUT(m)->lower.key_events_value.len=mog_out_len;
   current=!current;
   }
 
@@ -86,6 +83,8 @@ int mog_grab_key(){
   while(!single_grab.ready);
   return single_grab.key;
   }
+
+// TODO: splitting! redo mog so one can create one module per key group
 
 /*
 struct key_event left_out[12*10];
@@ -118,10 +117,8 @@ class mog_class;
 static module *create(char **argv){
   module *m=malloc(sizeof(module));
   default_module_init(m, &mog_class);
-  struct output_bundle *out=
-    (struct output_bundle *)m->output.bundle;
-  mog_out=out->right.key_events_value.buf;
-  out->_right.element.out_terminal.changed=1;
+  mog_out=OUTPUT(m)->lower.key_events_value.buf;
+  OUTPUT(m)->lower.changed=1;
   read_keys(keybits[!current]);
   return m;
   }

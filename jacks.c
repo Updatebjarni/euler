@@ -8,6 +8,8 @@ int create_jack(jack *to, jack *template, int dir, module *m){
   int n;
 
   *to=*template;
+  to->attention=m->attention;
+  to->parent_module=m;
   switch(template->type){
     case TYPE_ARRAY:
       to->array=malloc(sizeof(jack[template->len]));
@@ -30,7 +32,6 @@ int create_jack(jack *to, jack *template, int dir, module *m){
       else{
         to->out_terminal.connections=0;
         to->out_terminal.nconnections=0;
-        to->out_terminal.parent_module=m;
         to->out_terminal.changed=0;
         switch(template->type){
           case TYPE_EMPTY:
@@ -40,6 +41,8 @@ int create_jack(jack *to, jack *template, int dir, module *m){
           case TYPE_KEY_EVENTS:
             n=template->out_terminal.key_events_value.len;
             to->out_terminal.key_events_value.buf=malloc(sizeof(key_event[n]));
+            to->out_terminal.key_events_value.len=0;
+            to->out_terminal.key_events_value.bufsize=n;
             return 0;
           default:  // Shouldn't happen
             return 1;
@@ -114,26 +117,32 @@ int is_terminal(jack *j){
 
 /*** Must be run only with modules locked ***/
 int disconnect_input(jack *input){
-  struct out_terminal *output;
+  struct out_terminal *outterm;
   if(!is_terminal(input))return 1;
-  output=(struct out_terminal *)input->in_terminal.connection;
+  jack *output=input->in_terminal.connection;
+  outterm=&(output->out_terminal);
   input->in_terminal.connection=0;
+  if(input->attention)input->attention(input);
   int i;
-  for(i=output->nconnections; output->connections[i]!=input; ++i);
-  output->connections[i]=output->connections[output->nconnections-1];
-  --(output->nconnections);
+  for(i=outterm->nconnections; outterm->connections[i]!=input; ++i);
+  outterm->connections[i]=outterm->connections[outterm->nconnections-1];
+  --(outterm->nconnections);
+  if(output->attention)output->attention(output);
   return 0;
   }
 
 /*** Must be run only with modules locked ***/
-int disconnect_output(jack *_output){
-  if(!is_terminal(_output))return 1;
-  struct out_terminal *output=(struct out_terminal *)_output;
-  for(int i=0; i<output->nconnections; ++i)
-    ((struct in_terminal *)output->connections[i])->connection=0;
-  free(output->connections);
-  output->connections=0;
-  output->nconnections=0;
+int disconnect_output(jack *output){
+  if(!is_terminal(output))return 1;
+  for(int i=0; i<output->out_terminal.nconnections; ++i){
+    jack *input=output->out_terminal.connections[i];
+    input->in_terminal.connection=0;
+    if(input->attention)input->attention(input);
+    }
+  free(output->out_terminal.connections);
+  output->out_terminal.connections=0;
+  output->out_terminal.nconnections=0;
+  if(output->attention)output->attention(output);
   return 0;
   }
 
@@ -163,11 +172,11 @@ int disconnect_tree(jack *tree){
 /*** Must be run only with modules locked ***/
 int connect_jacks(jack *output, jack *input){
   if(!is_terminal(output) || !is_terminal(input))return 1;
+  if(output->type != input->type)return 1;
   if(input->in_terminal.connection){
     disconnect_input(input);
     printf("(removed previous connection)\n");
     }
-  if(output->type != input->type)return 1;
   output->out_terminal.connections=realloc(
     output->out_terminal.connections,
     sizeof(jack *)*(output->out_terminal.nconnections+1)
@@ -175,6 +184,8 @@ int connect_jacks(jack *output, jack *input){
   output->out_terminal.connections[output->out_terminal.nconnections]=input;
   ++(output->out_terminal.nconnections);
   input->in_terminal.connection=output;
+  if(output->attention)output->attention(output);
+  if(input->attention)input->attention(input);
   return 0;
   }
 

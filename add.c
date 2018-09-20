@@ -2,7 +2,7 @@
 #include<stdint.h>
 #include"orgel.h"
 
-#include"na.spec.c"
+#include"add.spec.c"
 
 
 static void tick(module *m, int elapsed){
