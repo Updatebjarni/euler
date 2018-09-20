@@ -16,7 +16,7 @@ typedef struct cquencer_module{
   }cquencer_module;
 
 static int32_t keytopitch(int key){
-  int32_t base=A440/2/2/2;
+  int32_t base=0;//A440/2;
   return base+key*HALFNOTE;
 }
 
@@ -25,22 +25,20 @@ static void tick(module *_m, int elapsed){
   if(INPUT(m)->ticksperbeat.connection){
     int32_t ticksperbeat=INPUT(m)->ticksperbeat.connection->value;
     
-    m->time+=elapsed;
-    int pwl=m->time%8*ticksperbeat;
-    int step=0;
-    int gate=0;
-    while (pwl>ticksperbeat){
-      step++;
-      pwl-=ticksperbeat;
-      }
+    int pwl=m->time%(8*ticksperbeat);
+    int step=pwl/ticksperbeat;
+    pwl-=ticksperbeat*step;
 
-    if (pwl < 100)
+    int gate=0;
+    if (pwl<100)
       gate=1;
     
     OUTPUT(m)->pitch.int32_value=m->pitch[step];
     OUTPUT(m)->value1.int32_value=m->value1[step];
     OUTPUT(m)->value2.int32_value=m->value2[step];
     OUTPUT(m)->gate.bool_value=gate;
+
+    m->time+=elapsed;
     }
 }
 
@@ -56,14 +54,23 @@ static module *create(char **argv){
   m->value2=malloc(sizeof(int32_t));
   
   m->pitch[0]=keytopitch(0);
-  m->pitch[0]=keytopitch(12);
-  m->pitch[0]=keytopitch(24);
-  m->pitch[0]=keytopitch(36);
-  m->pitch[0]=keytopitch(0);
-  m->pitch[0]=keytopitch(12);
-  m->pitch[0]=keytopitch(24);
-  m->pitch[0]=keytopitch(36);
-  
+  m->pitch[1]=keytopitch(0);
+  m->pitch[2]=keytopitch(2);
+  m->pitch[3]=keytopitch(0);
+  m->pitch[4]=keytopitch(3);
+  m->pitch[5]=keytopitch(0);
+  m->pitch[6]=keytopitch(5);
+  m->pitch[7]=keytopitch(3);
+
+  m->value1[0]=keytopitch(400);
+  m->value1[1]=keytopitch(400);
+  m->value1[2]=keytopitch(400);
+  m->value1[3]=keytopitch(400);
+  m->value1[4]=keytopitch(400);
+  m->value1[5]=keytopitch(400);
+  m->value1[6]=keytopitch(400);
+  m->value1[7]=keytopitch(400);
+
   return (module *)m;
   }
 
