@@ -15,15 +15,16 @@ in {
       filter: bool
       sync: bool
       ringmod: bool
+      test: bool
       }
     vol: int32
     hp: bool
     bp: bool
     lp: bool
-    res: int32
-    cutoff: int32
     mute3: bool
+    res: int32
     filtext: bool
+    cutoff: int32
     }
   mixer: int32
   }
