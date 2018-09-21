@@ -77,6 +77,7 @@ void skip_ws(){
   while(1){
     switch(*p){
       case ' ': ++column; break;
+      case '\t': column+=8; break;
       case '\n': ++line; column=0; this_line=p+1; break;
       default: return;
       }
