@@ -54,6 +54,8 @@ static void tick(module *m, int elapsed){
       chip[chipno].filtext=chipjacks->filtext.connection->value;
     if(chipjacks->res.connection)
       chip[chipno].res=chipjacks->res.connection->value;
+    if(chipjacks->cutoff.connection)
+      chip[chipno].cutoff=chipjacks->cutoff.connection->value;
       
     for(int voiceno=0; voiceno<3; ++voiceno){
       struct input_chip_voice_bundle *voice=
