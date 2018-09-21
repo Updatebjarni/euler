@@ -111,6 +111,8 @@ static void tick(module *m, int elapsed){
       }
     write_chip(chipno, REG_MODEVOL, chip[chipno].modevol);
     write_chip(chipno, REG_RESFILT, chip[chipno].resfilt);
+    write_chip(chipno, REG_CUTOFF_LO, chip[chipno].fc_lo);
+    write_chip(chipno, REG_CUTOFF_HI, chip[chipno].fc_hi);
     }
   }
 
