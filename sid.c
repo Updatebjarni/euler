@@ -118,8 +118,9 @@ class sid_class;
 
 static void debug(module *_m){
   for(int chipno=0; chipno<3; ++chipno){
-    printf("Chip %d:  MODEVOL=%.2X  RESFILT=%.2X\n",
-           chipno, chip[chipno].modevol, chip[chipno].resfilt);
+    printf("Chip %d:  MODEVOL=%.2X  RESFILT=%.2X CUTOFF=%.2X:%.2X\n",
+           chipno, chip[chipno].modevol, chip[chipno].resfilt,
+           chip[chipno].fc_hi, chip[chipno].fc_lo);
     for(int voiceno=0; voiceno<3; ++voiceno){
       printf("  Voice %d:  AD=%.2X  SR=%.2X  CTRL=%.2X"
              "  PW=%.2X:%.2X  FREQ=%.2X:%.2X\n",
