@@ -127,7 +127,16 @@ int disconnect_input(jack *input){
   for(i=outterm->nconnections; outterm->connections[i]!=input; ++i);
   outterm->connections[i]=outterm->connections[outterm->nconnections-1];
   --(outterm->nconnections);
-  if(output->attention)output->attention(output);
+  if(!outterm->nconnections){
+    free(outterm->connections);
+    outterm->connections=0;
+    if(!output->parent_module){
+      free(output);
+      return 0;
+      }
+    }
+  if(output->parent_module && output->attention)
+    output->attention(output);
   return 0;
   }
 
@@ -184,7 +193,7 @@ int connect_jacks(jack *output, jack *input){
   output->out_terminal.connections[output->out_terminal.nconnections]=input;
   ++(output->out_terminal.nconnections);
   input->in_terminal.connection=output;
-  if(output->attention)output->attention(output);
+  if(output->parent_module && output->attention)output->attention(output);
   if(input->attention)input->attention(input);
   return 0;
   }

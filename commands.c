@@ -149,21 +149,12 @@ void cmd_set(char **argv){
     return;
     }
   long n;
-  char *end;
-  n=strtol(argv[2], &end, 0);
-  if(!*argv[2] || *end){
+  if(strtocv(argv[2], &n)){
     printf("Invalid value \"%s\".\n", argv[2]);
     return;
     }
   jack *constant;
-  if(j->in_terminal.connection){
-    if(j->in_terminal.connection->parent_module){
-      printf("The jack is already connected.\n");
-      return;
-      }
-    constant=j->in_terminal.connection;
-    }
-  else constant=malloc(sizeof(jack));
+  constant=malloc(sizeof(jack));
   constant->type=j->type;
   if(j->type==TYPE_BOOL)
     constant->out_terminal.bool_value=n;
@@ -171,11 +162,10 @@ void cmd_set(char **argv){
     constant->out_terminal.int32_value=n;
   constant->parent_module=0;
   constant->out_terminal.changed=1;
-  constant->out_terminal.connections=malloc(sizeof(jack *));
-  constant->out_terminal.connections[0]=j;
-  constant->out_terminal.nconnections=1;
+  constant->out_terminal.connections=0;
+  constant->out_terminal.nconnections=0;
   LOCK_MODULES();
-  j->in_terminal.connection=constant;
+  connect_jacks(constant, j);
   UNLOCK_MODULES();
   }
 

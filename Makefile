@@ -1,4 +1,4 @@
-CFLAGS := -O2 -std=c99 -Wall -fplan9-extensions
+CFLAGS := -g -O2 -std=c99 -Wall -fplan9-extensions
 
 MODULES := mog prio na sid add slew lfo gdelay sdelay keyboard cquencer
 MODOBJS := $(patsubst %,%.o,$(MODULES))
