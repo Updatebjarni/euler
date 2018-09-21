@@ -10,14 +10,24 @@
 typedef struct cquencer_module{
   module;
   int time; // Time since start
-  int32_t *pitch; // Key value
-  int32_t *value1;
-  int32_t *value2;
   }cquencer_module;
 
-static int32_t keytopitch(int key){
-  int32_t base=A440/2/2/2;
-  return base+key*HALFNOTE;
+static void pstep(int input, cquencer_module *m){
+  if (!INPUT(m)->step.INDEX(input)->pitch.connection) return;
+  int32_t p = INPUT(m)->step.INDEX(input)->pitch.connection->value;
+  OUTPUT(m)->pitch.int32_value=p;
+}
+
+static void v1step(int input, cquencer_module *m){
+  if (!INPUT(m)->step.INDEX(input)->value1.connection) return;
+  int32_t p = INPUT(m)->step.INDEX(input)->value1.connection->value;
+  OUTPUT(m)->value1.int32_value=p;
+}
+  
+static void v2step(int input, cquencer_module *m){
+  if (!INPUT(m)->step.INDEX(input)->value2.connection) return;
+  int32_t p = INPUT(m)->step.INDEX(input)->value2.connection->value;
+  OUTPUT(m)->value2.int32_value=p;
 }
 
 static void tick(module *_m, int elapsed){
@@ -25,22 +35,21 @@ static void tick(module *_m, int elapsed){
   if(INPUT(m)->ticksperbeat.connection){
     int32_t ticksperbeat=INPUT(m)->ticksperbeat.connection->value;
     
-    m->time+=elapsed;
-    int pwl=m->time%8*ticksperbeat;
-    int step=0;
-    int gate=0;
-    while (pwl>ticksperbeat){
-      step++;
-      pwl-=ticksperbeat;
-      }
+    int pwl=m->time%(8*ticksperbeat);
+    int step=pwl/ticksperbeat;
+    pwl%=ticksperbeat;
 
-    if (pwl < 100)
+    int gate=0;
+    if (pwl<100)
       gate=1;
     
-    OUTPUT(m)->pitch.int32_value=m->pitch[step];
-    OUTPUT(m)->value1.int32_value=m->value1[step];
-    OUTPUT(m)->value2.int32_value=m->value2[step];
+    //OUTPUT(m)->pitch.int32_value=m->pitch[step];
+    pstep(step, m);
+    v1step(step, m);
+    v2step(step, m);
     OUTPUT(m)->gate.bool_value=gate;
+
+    m->time+=elapsed;
     }
 }
 
@@ -51,18 +60,6 @@ static module *create(char **argv){
   m=malloc(sizeof(cquencer_module));
   default_module_init((module *)m, &cquencer_class);
   m->time=0;
-  m->pitch=malloc(sizeof(int32_t));
-  m->value1=malloc(sizeof(int32_t));
-  m->value2=malloc(sizeof(int32_t));
-  
-  m->pitch[0]=keytopitch(0);
-  m->pitch[0]=keytopitch(12);
-  m->pitch[0]=keytopitch(24);
-  m->pitch[0]=keytopitch(36);
-  m->pitch[0]=keytopitch(0);
-  m->pitch[0]=keytopitch(12);
-  m->pitch[0]=keytopitch(24);
-  m->pitch[0]=keytopitch(36);
   
   return (module *)m;
   }
