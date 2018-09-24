@@ -1,0 +1,24 @@
+create sid
+create add
+create add
+create add
+create lfo
+create slew
+create prio
+
+connect mog/right prio-1
+
+set sid/chip[0]/voice[0]/pitch 805306368
+connect prio-1/monophone[0]/pitch sid/chip[0]/cutoff
+set sid/chip[0]/voice[0]/gate 1
+
+set sid/chip[0]/vol 15
+set sid/chip[0]/lp 1
+set sid/chip[0]/voice[0]/noise 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 4
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 9
+set sid/chip[0]/voice[0]/pw 2048
+
+run sid
