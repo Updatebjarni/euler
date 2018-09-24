@@ -14,19 +14,21 @@ typedef struct pulse_module{
 
 static void tick(module *_m, int elapsed){
   pulse_module *m=(pulse_module *)_m;
-  if(INPUT(m)->gate.connection && INPUT(m)->length.connection &&
-     INPUT(m)->height.connection){
-
+  if(INPUT(m)->gate.connection && INPUT(m)->length.connection){
+    
     if(INPUT(m)->gate.connection->value){
-      if(m->time=0){
+      if(m->time==0){
 	m->time=INPUT(m)->length.connection->value;
         }
       }
 
     if(m->time>0){
-      OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
+      if(INPUT(m)->height.connection)
+        OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
+      else
+	OUTPUT(m).int32_value=CVMAX;
       } else {
-      OUTPUT(m).int32_value=0;
+        OUTPUT(m).int32_value=0;
       }
     }
   }
