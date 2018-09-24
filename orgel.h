@@ -14,6 +14,7 @@
 #define OCTAVE   134217728L
 #define VOLT     OCTAVE
 #define HALFNOTE 11184811L
+#define CVMAX    VOLT*10
 
 enum{CONNECTED, DISCONNECTED};
 
@@ -132,6 +133,8 @@ int strtonote(char *s, int *to);
 int strtocv(char *s, long *to);
 void free_toklist(char **toklist, int len);
 int cmdlex(char ***to, char *str);
+
+int e_min(int a, int b);
 
 extern class *all_classes[];
 extern module **loaded_modules;
