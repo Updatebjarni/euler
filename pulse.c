@@ -24,7 +24,7 @@ static void tick(module *_m, int elapsed){
       }
 
     if(m->time>0){
-      OUTPUT(m).int32_value=INDEX(m)->height.connection->value;
+      OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
       } else {
       OUTPUT(m).int32_value=0;
       }
