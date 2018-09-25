@@ -1,0 +1,41 @@
+create sid
+create add
+create lfo
+create slew
+create gdelay
+create sdelay
+
+set slew-1/rate 1000000
+set gdelay-1/delay 500
+set sdelay-1/delay 500
+
+create prio
+connect mog/lower prio-1
+
+connect prio-1/monophone[0]/pitch slew-1/signal
+connect prio-1/monophone[0]/gate gdelay-1/gate 
+connect gdelay-1 sid/chip[1]/voice[0]/gate
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+
+connect slew-1 sdelay-1/signal
+connect slew-1 sid/chip[0]/voice[0]/pitch
+connect sdelay-1 sid/chip[1]/voice[0]/pitch
+
+
+set sid/chip[0]/vol 15
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 4
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 9
+set sid/chip[0]/voice[0]/pw 2048
+
+set sid/chip[1]/vol 15
+set sid/chip[1]/voice[0]/pulse 1
+set sid/chip[1]/voice[0]/attack 0
+set sid/chip[1]/voice[0]/decay 4
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 9
+set sid/chip[1]/voice[0]/pw 2048
+
+run sid
