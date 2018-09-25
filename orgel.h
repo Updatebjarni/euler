@@ -31,7 +31,7 @@ typedef struct module module;
 enum{KEY_DOWN, KEY_UP};
 
 typedef struct key_event{
-  unsigned char key, state;
+  unsigned int key, state;
   }key_event;
 
 typedef union{
