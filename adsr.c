@@ -18,7 +18,7 @@ typedef struct adsr_module{
   adsr_state state;
   }adsr_module;
 
-static inline int32_t convert_out(adsr_module *m, double a){
+static inline int32_t convert_out(adsr_module *m, double a) {
   int32_t max=CVMAX;
   int32_t min=0;
   if (INPUT(m)->min.connection)
@@ -29,13 +29,13 @@ static inline int32_t convert_out(adsr_module *m, double a){
   return min*(1.0-a)+max*a;
   }
 
-static void tick(module *_m, int elapsed){
+static void tick(module *_m, int elapsed) {
   adsr_module *m=(adsr_module *)_m;
   if (INPUT(m)->gate.connection &&
       INPUT(m)->attack.connection &&
       INPUT(m)->decay.connection &&
       INPUT(m)->sustain.connection &&
-      INPUT(m)->release.connection){
+      INPUT(m)->release.connection) {
  
     int32_t attack=(INPUT(m)->attack.connection->value);
     int32_t decay=(INPUT(m)->decay.connection->value);
@@ -47,7 +47,7 @@ static void tick(module *_m, int elapsed){
     double drate=(1.0-convsus)/decay;
     double rrate=convsus/release;
     
-    switch(m->state){
+    switch(m->state) {
       case IDLE:
 	if (INPUT(m)->gate.connection->value){
 	  m->state=ATTACK;
@@ -56,7 +56,7 @@ static void tick(module *_m, int elapsed){
 	m->currentamp=0.0;
 	break;
       case ATTACK:
-	if (m->time>=attack){
+	if (m->time>=attack) {
 	  m->state=DECAY;
 	  m->time=0;
     	  }
@@ -71,14 +71,14 @@ static void tick(module *_m, int elapsed){
 	  m->state=RELEASE;
 	  m->time=0;
   	  }
-	if (m->time>=decay){
+	if (m->time>=decay) {
 	  m->state=SUSTAIN;
 	  m->time=0;
 	  }
 	m->currentamp=1.0-m->time*drate;
         break;
       case SUSTAIN:
-	if (!INPUT(m)->gate.connection->value){
+	if (!INPUT(m)->gate.connection->value) {
 	  m->state=RELEASE;
 	  m->time=0;
   	  }
@@ -86,7 +86,7 @@ static void tick(module *_m, int elapsed){
         break;
       case RELEASE:
 	m->currentamp-=rrate;
-	if (m->currentamp<=0){
+	if (m->currentamp<=0) {
 	  m->currentamp=0;
 	  m->state=IDLE;
    	  }
@@ -102,7 +102,7 @@ static void tick(module *_m, int elapsed){
 
 class adsr_class;
 
-static module *create(char **argv){
+static module *create(char **argv) {
   adsr_module *m;
 
   m=malloc(sizeof(adsr_module));
