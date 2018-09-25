@@ -10,17 +10,22 @@
 typedef struct pulse_module {
   module;
   int time;
+  int on;
   }pulse_module;
 
 static void tick(module *_m, int elapsed) {
   pulse_module *m=(pulse_module *)_m;
   if(INPUT(m)->gate.connection && INPUT(m)->length.connection) {
     if(INPUT(m)->gate.connection->value) {
-      if(m->time==0) {
+      if(m->time==0 && (!m->on)) {
+	m->on=1;
 	m->time=INPUT(m)->length.connection->value;
 	}
+      } else {
+      if(m->on)
+	m->on=0;
       }
-    
+   
     if(m->time>0) {
       if(INPUT(m)->height.connection) {
 	OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
@@ -42,6 +47,7 @@ static module *create(char **argv) {
   m=malloc(sizeof(pulse_module));
   default_module_init((module *)m, &pulse_class);
   m->time=0;
+  m->on=0;
   return (module *)m;
   }
 
