@@ -7,37 +7,38 @@
 
 #include"pulse.spec.c"
 
-typedef struct pulse_module{
+typedef struct pulse_module {
   module;
   int time;
   }pulse_module;
 
-static void tick(module *_m, int elapsed){
+static void tick(module *_m, int elapsed) {
   pulse_module *m=(pulse_module *)_m;
-  if(INPUT(m)->gate.connection && INPUT(m)->length.connection){
-    
-    if(INPUT(m)->gate.connection->value){
-      if(m->time==0){
+  if(INPUT(m)->gate.connection && INPUT(m)->length.connection) {
+    if(INPUT(m)->gate.connection->value) {
+      if(m->time==0) {
 	m->time=INPUT(m)->length.connection->value;
-        }
+	}
       }
-
-    if(m->time>0){
-      if(INPUT(m)->height.connection)
-        OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
-      else
+    
+    if(m->time>0) {
+      if(INPUT(m)->height.connection) {
+	OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
+	}
+      else { 
 	OUTPUT(m).int32_value=CVMAX;
+	}
+      m->time--;
       } else {
-        OUTPUT(m).int32_value=0;
+      OUTPUT(m).int32_value=0;
       }
     }
   }
 
 class pulse_class;
 
-static module *create(char **argv){
+static module *create(char **argv) {
   pulse_module *m;
-
   m=malloc(sizeof(pulse_module));
   default_module_init((module *)m, &pulse_class);
   m->time=0;
