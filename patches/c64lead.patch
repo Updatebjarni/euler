@@ -7,8 +7,9 @@ connect mog/lower prio-1
 
 connect prio-1/monophone[0]/pitch add-1/signal
 connect prio-1/monophone[0]/gate pulse-1/gate
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
 
-set pulse-1/length=100
+set pulse-1/length=50
 set pulse-1/height 1V
 connect pulse-1 add-1/control
 connect add-1 sid/chip[0]/voice[0]/pitch
