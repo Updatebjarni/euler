@@ -198,6 +198,15 @@ int connect_jacks(jack *output, jack *input){
   return 0;
   }
 
+int resize_key_events(jack *j, int bufsize){
+  key_event *buf=realloc(j->out_terminal.key_events_value.buf,
+                         bufsize*sizeof(key_event));
+  if(!buf)return 1;
+  j->out_terminal.key_events_value.buf=buf;
+  j->out_terminal.key_events_value.bufsize=bufsize;
+  return 0;
+  }
+
 const char help_connect[]="Connect an output jack to an input jack.\n"
                           "Usage: connect <output> <input>\n";
 
