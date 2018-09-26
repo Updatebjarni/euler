@@ -126,24 +126,6 @@ module *create_module(char *class_name, char **argv){
 
 const char help_create[]="Create a new module.\n";
 
-int parse_parens(char ***argv, char ***paren){
-  char **p=*argv;
-  int parcount;
-  if(strcmp(*p, "("))return -1;
-  parcount=1;
-  do{
-    ++p;
-    if(!*p)return -1;
-    if(!strcmp(*p, ")"))--parcount;
-    else if(!strcmp(*p, "("))++parcount;
-    }while(parcount);
-  free(*p);
-  *p=0;
-  *paren=(*argv)+1;
-  *argv=p+1;
-  return 0;
-  }
-
 void cmd_create(char **argv){
   module *m;
   char *classname=0, *modname=0, **paren=0;
