@@ -49,6 +49,7 @@ int strtocv(char *s, long *to){
 
   n=strtol(s, &end, 0);
   if(!*end){*to=n; return 0;}
+  if(!strcmp(end, "H")){*to=n*HALFNOTE; return 0;}
   d=strtod(s, &end);
   if(end!=s){
     if(!strcmp(end, "Hz")){
