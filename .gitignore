@@ -29,6 +29,7 @@
 *.hex
 euler-demo
 jackspec
+orgelperm
 
 # Debug files
 *.dSYM/
