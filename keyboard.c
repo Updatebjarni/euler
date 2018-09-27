@@ -10,58 +10,63 @@
 
 typedef struct keyboard_module{
   module;
-  int left, right, transpose;
+  int map[256], n;
+  int *transpose;
   }keyboard_module;
 
 static void tick(module *_m, int elapsed){
   keyboard_module *m=(keyboard_module *)_m;
-  int len=0;
+  for(int i=0; i<m->n; ++i)
+    OUTPUT(m)->range.INDEX(i).key_events_value.len=0;
   if(INPUT(m).connection){
     struct out_terminal *v=&(INPUT(m).connection->out_terminal);
     for(int i=0; i<v->key_events_value.len; ++i){
       key_event e=v->key_events_value.buf[i];
-      if(e.key>=m->left && e.key<=m->right)
-        OUTPUT(m).key_events_value.buf[len]=e;
-        OUTPUT(m).key_events_value.buf[len].key+=m->transpose;
-        ++len;
+      int range=m->map[e.key];
+      e.key+=m->transpose[range];
+      int pos=OUTPUT(m)->range.INDEX(range).key_events_value.len++;
+      OUTPUT(m)->range.INDEX(range).key_events_value.buf[pos]=e;
       }
     }
-  OUTPUT(m).key_events_value.len=len;
+  OUTPUT(m)->range.INDEX(0).changed=1;
   }
 
 static void attention(jack *j){
-  if(j==(jack *)&INPUT(j->parent_module)){
-    if(j->in_terminal.connection){
-      OUTPUT(j->parent_module).key_events_value.buf=
-        realloc(
-          OUTPUT(j->parent_module).key_events_value.buf,
-          j->in_terminal.connection->out_terminal.key_events_value.bufsize
+  keyboard_module *m=(keyboard_module *)j->parent_module;
+
+  if(j==(jack *)&INPUT(m)){
+    if(INPUT(m).connection){
+      for(int i=0; i<m->n; ++i)
+        resize_key_events(
+          &(OUTPUT(m)->range.INDEX(i)),
+          INPUT(m).connection->out_terminal.key_events_value.bufsize
           );
-      OUTPUT(j->parent_module).key_events_value.bufsize=
-        j->in_terminal.connection->out_terminal.key_events_value.bufsize;
       }
     }
   }
 
 class keyboard_class;
 
+static int intcmp(const void *a, const void *b){
+  return (*(int *)a)-(*(int *)b);
+  }
+
 static module *create(char **argv){
-// *** create keyregion split [note]
-//       splits input into two sides, at note. without note, read key from mog.
-//       this produces a module with two outputs "left" and "right"
-//     create keyregion [range=left,right]
-//       creates a module that has one output, with keys in the given range.
-//       without range, reads two keys from mog.
-  jack *source;
+  jack *source=0;
   long n=2;
   char *sourcename, *end;
   int i=0, *points;
+  struct{unsigned char left, right;} *ranges;
+
+  if(*argv){
+    asprintf(&sourcename, "mog/%s", *argv);
+    if((source=find_jack(*argv, DIR_OUT)) ||
+       (source=find_jack(sourcename, DIR_OUT)))
+      ++argv;
+    free(sourcename);
+    }
 
   if(*argv && !strcmp(*argv, "split")){
-    ++argv;
-    if(!*argv)goto no_source;
-    asprintf(&sourcename, "mog/%s", *argv);
-    if(!(source=find_jack(sourcename, DIR_OUT)))goto no_source;
     ++argv;
     if(*argv && !strcmp(*argv, "into")){
       ++argv;
@@ -86,59 +91,82 @@ static module *create(char **argv){
       points[i]=mog_grab_key();
       printf("%s\n", notetostr(points[i]));
       }
-    return; // ***
+    qsort(points, n-1, sizeof(int), intcmp);
+    ranges=malloc(sizeof(ranges[0])*n);
+    ranges[0].left=0;
+    ranges[n-1].right=255;
+    for(int i=0; i<(n-1); ++i){
+      ranges[i].right=points[i]-1;
+      ranges[i+1].left=points[i];
+      }
+    free(points);
     }
   else if(*argv && !strcmp(*argv, "range")){
+// ***
+printf("range is unimplemented :(\n"); return 0;
     }
   else{
     printf("Specify one of \"range\" and \"split\".\n");
-    return;
+    return 0;
     }
 
-/*
-  for(; *argv; ++argv){
-    if(!strcmp(*argv, "lower") || !strcmp(*argv, "upper") ||
-       !strcmp(*argv, "pedal")){
-      keyboard=*argv;
-      continue;
-      }
-    if(**argv=='+' || **argv=='-'){
-      transpose=strtol(*argv, &end, 0);
-      if(*end)goto syntax_error;
-      continue;
-      }
-    if(!strcmp(*argv, "split")){
-      if(range)goto range_or_split;
-      split=1;
-      continue;
-      }
-    if(!strcmp(*argv, "range")){
-      if(split)goto range_or_split;
-      range=1;
-      continue;
-      }
-    if(!strtocv(*argv, &key)){
-      if(split){
-        
-        }
-      else if(range){
-        }
-      else goto range_or_split;
-      continue;
-      }
-*/
+  keyboard_module *m=malloc(sizeof(keyboard_module));
+  default_module_init((module *)m, &keyboard_class);
 
-  module *m=malloc(sizeof(keyboard_module));
-  default_module_init(m, &keyboard_class);
-  OUTPUT(m).changed=1;
+  for(int key=0, range=0; key<256; ++key){
+    if(key>ranges[range].right)++range;
+    m->map[key]=range;
+    }
+  free(ranges);
+
+  jack *rj=malloc(sizeof(jack[n]));
+  for(int i=0; i<n; ++i)
+    create_jack(rj+i, &output_range_template, DIR_OUT, m);
+  jack *a=(jack *)&(OUTPUT(m)->range);
+  a->array=rj;
+  a->len=n;
+  m->n=n;
+
+  m->transpose=malloc(sizeof(int)*n);
+  for(int i=0; i<n; ++i)
+    m->transpose[i]=0;
+
+  connect_jacks(source, &(m->input));
+
   return m;
 
-  no_source:
-  printf("Specify one of \"upper\", \"lower\", and \"pedal\".\n");
-  return;
   syntax_error:
   printf("Syntax error.\n");
-  return;
+  return 0;
+  }
+
+static void config(module *_m, char **argv){
+  keyboard_module *m=(keyboard_module *)_m;
+  int range, offset;
+  char *end;
+
+  if(argv && argv[0] && !strcmp(argv[0], "transpose") && argv[1]){
+    ++argv;
+    while(argv[0]){
+      if(!strcmp(argv[0], ","))++argv;
+      if(argv[0] && (range=strtol(argv[0], &end, 0), !*end) &&
+         argv[1] && (offset=strtol(argv[1], &end, 0), !*end)){
+        if(range<0 || range>=m->n){
+          printf("Range must be between 0 and %d for module %s.\n",
+                 m->n, m->name);
+          return;
+          }
+        m->transpose[range]=offset;
+        argv+=2;
+        }
+      else{
+        printf("Syntax error.\n");
+        return;
+        }
+      }
+    }
+  else printf("Use 'config keyboard(transpose <range> <offset>)' to "
+              "transpose a range.\n");
   }
 
 class keyboard_class={
@@ -146,7 +174,8 @@ class keyboard_class={
   "Plocka ut en del av ett klaviatur",  // descr
   &input, &output,                      // default_input, default_output
   tick,                                 // default_tick
-  0, 0,                                 // default_destroy, default_config
+  0,                                    // default_destroy
+  config,                               // default_config
   DYNAMIC_CLASS,                        // is_static
   create,                               // create
   0,                                    // create_counter

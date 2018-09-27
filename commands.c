@@ -197,21 +197,31 @@ void cmd_j(char **argv){
     }
   }
 
-void cmd_config(char **cmdline){
-  if(!cmdline[1]){
+void cmd_config(char **argv){
+  char **paren=0;
+
+  ++argv;
+  if(!argv[0]){
     printf(help_config);
     return;
     }
-  module *m=find_module(cmdline[1]);
+  module *m=find_module(argv[0]);
   if(!m){
-    printf("No module named\"%s\".\n", cmdline[1]);
+    printf("No module named\"%s\".\n", argv[0]);
     return;
     }
   if(!m->config){
-    printf("No configuration available for module \"%s\".\n", cmdline[1]);
+    printf("No configuration available for module \"%s\".\n", argv[0]);
     return;
     }
-  m->config(m, cmdline+2);
+  ++argv;
+
+  if(*argv && !strcmp(*argv, "(") && parse_parens(&argv, &paren)==-1){
+    printf("Syntax error.\n");
+    return;
+    }
+
+  m->config(m, paren);
   }
 
 void cmd_help(char **cmdline){

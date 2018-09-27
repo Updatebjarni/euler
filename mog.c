@@ -10,7 +10,7 @@
 
 
 struct debounce{
-  char key, timer;
+  int key, timer;
   };
 
 static unsigned short keybits[2][16];
@@ -28,7 +28,7 @@ static void read_keys(unsigned short *buf){
   while(!((*buf++=MODULE_READ())&0x8000));
   }
 
-volatile struct{char key; char ready;}single_grab;
+volatile struct{int key; char ready;}single_grab;
 
 static void tick(module *m, int elapsed){
   if(HEAD.key!=-1){
@@ -83,34 +83,6 @@ int mog_grab_key(){
   while(!single_grab.ready);
   return single_grab.key;
   }
-
-// TODO: splitting! redo mog so one can create one module per key group
-
-/*
-struct key_event left_out[12*10];
-int left_out_len;
-struct key_event right_out[12*10];
-int right_out_len;
-
-static int split=-1;
-static int transpose_left, transpose_right;
-
-void split_keys(){
-  left_out_len=0; right_out_len=0;
-  for(int i=0; i<mog_out_len; ++i){
-    if(mog_out[i].key>split){
-      right_out[right_out_len]=mog_out[i];
-      right_out[right_out_len].key+=transpose_right;
-      ++right_out_len;
-      }
-    else{
-      left_out[left_out_len]=mog_out[i];
-      left_out[left_out_len].key+=transpose_left;
-      ++left_out_len;
-      }
-    }
-  }
-*/
 
 class mog_class;
 

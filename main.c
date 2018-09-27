@@ -23,7 +23,7 @@ void require_orgelperm(int foo){
   }
 
 int main(int argc, char *argv[]){
-  char *line;
+  char *line, *histfile=0;
 
   orgelperm_argv=malloc(sizeof(argv[0])*(argc+2));
   memcpy(orgelperm_argv+1, argv, sizeof(argv[0])*(argc+1));
@@ -35,9 +35,14 @@ int main(int argc, char *argv[]){
   module *mog=create_module("mog", 0);
   run_module(mog);
 
+  asprintf(&histfile, "%s/.euler_history", getenv("HOME"));
+  read_history(histfile);
+
   while((line=readline("euler> "))){
     if(strcspn(line, " \t")){
       add_history(line);
+      write_history(histfile);
+      history_truncate_file(histfile, 500);
       run_cmdline(line);
       }
     free(line);

@@ -32,7 +32,7 @@ typedef struct module module;
 enum{KEY_DOWN, KEY_UP};
 
 typedef struct key_event{
-  unsigned int key, state;
+  unsigned char key, state;
   }key_event;
 
 typedef union{
@@ -109,7 +109,7 @@ typedef struct{
   }paramspec;
 
 int parse_param(char ***argv, paramspec *specs);
-
+int parse_parens(char ***argv, char ***paren);
 void run_cmdline(char *line);
 char **tokenise(char *str, char *sep);
 void start_rt(void);
@@ -128,6 +128,7 @@ int disconnect_output(jack *_output);
 int disconnect_tree(jack *tree);
 int create_jack(jack *to, jack *template, int dir, module *m);
 void show_jack(jack *j, int dir, int indent);
+int resize_key_events(jack *j, int bufsize);
 char *notetostr(int note);
 int strtonote(char *s, int *to);
 int strtocv(char *s, long *to);

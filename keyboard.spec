@@ -1,3 +1,5 @@
 in key_events
 
-out key_events(0)
+out {
+  range: array(0) of key_events(0)
+  }

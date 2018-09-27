@@ -29,6 +29,7 @@
 *.hex
 euler-demo
 jackspec
+orgelperm
 
 # Debug files
 *.dSYM/
@@ -45,6 +46,9 @@ jackspec
 
 # C source generated from .spec files by jackspec
 *.spec.c
+
+# Testing patch files can be kept in the root directory
+/*.patch
 
 # C source generated from module list
 all_modules.c
