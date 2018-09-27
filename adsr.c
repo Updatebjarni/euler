@@ -16,62 +16,90 @@ typedef struct adsr_module{
   int time;
   double currentamp;
   adsr_state state;
+  int32_t max;
+  int32_t min;
+  int32_t attack;
+  int32_t decay;
+  int32_t sustain;
+  int32_t release;
   }adsr_module;
 
 static inline int32_t convert_out(adsr_module *m, double a) {
-  int32_t max=CVMAX;
-  int32_t min=0;
-  if (INPUT(m)->min.connection)
-    min=INPUT(m)->min.connection->value;
-  if (INPUT(m)->max.connection)
-    max=INPUT(m)->max.connection->value;
   // linear interpolation
-  return min*(1.0-a)+max*a;
+  a=fmax(fmin(1.0, a), 0.0);
+  return m->min*(1.0-a)+m->max*a;
+  }
+
+// Reads all the inputs and assigns default values
+static void readinputs(adsr_module *m) {
+  m->attack=0;
+  if (INPUT(m)->attack.connection)
+    m->attack=(INPUT(m)->attack.connection->value);
+  m->decay=0;
+  if (INPUT(m)->decay.connection)
+    m->decay=(INPUT(m)->decay.connection->value);
+  m->sustain=1.0;
+  if (INPUT(m)->sustain.connection)
+    m->sustain=(INPUT(m)->sustain.connection->value);
+  m->release=0;
+  if (INPUT(m)->release.connection)
+    m->release=(INPUT(m)->release.connection->value);
+  m->min=0;
+  if (INPUT(m)->min.connection)
+    m->min=INPUT(m)->min.connection->value;
+  m->max=CVMAX;
+  if (INPUT(m)->max.connection)
+    m->max=INPUT(m)->max.connection->value;
   }
 
 static void tick(module *_m, int elapsed) {
   adsr_module *m=(adsr_module *)_m;
-  if (INPUT(m)->gate.connection &&
-      INPUT(m)->attack.connection &&
-      INPUT(m)->decay.connection &&
-      INPUT(m)->sustain.connection &&
-      INPUT(m)->release.connection) {
- 
-    int32_t attack=(INPUT(m)->attack.connection->value);
-    int32_t decay=(INPUT(m)->decay.connection->value);
-    int32_t sustain=(INPUT(m)->sustain.connection->value);
-    int32_t release=(INPUT(m)->release.connection->value);
+  if (INPUT(m)->gate.connection) {
 
-    double convsus=((double)sustain)/CVMAX;
-    double arate=1.0/attack;
-    double drate=(1.0-convsus)/decay;
-    double rrate=convsus/release;
+    readinputs(m);
     
-    switch(m->state) {
+    double arate=0;
+    if (m->attack>0)
+      arate=1.0/m->attack;
+
+    double suslevel=0;
+    if (m->max>0)
+      suslevel=((double)m->sustain)/((double)m->max);
+
+    double drate=(1.0-suslevel)/m->decay;
+    if (m->decay>0)
+      drate=(1.0-suslevel)/m->decay;      
+    
+    double rrate=0;
+    if (m->release>0)
+      rrate=suslevel/m->release;
+    
+    switch(m->state)
+      {
       case IDLE:
-	if (INPUT(m)->gate.connection->value){
+	if (INPUT(m)->gate.connection->value) {
 	  m->state=ATTACK;
 	  m->time=0; // reset timer
 	  }
 	m->currentamp=0.0;
 	break;
       case ATTACK:
-	if (m->time>=attack) {
+	if (m->time>=m->attack || m->attack==0) {
 	  m->state=DECAY;
 	  m->time=0;
     	  }
-	if (!INPUT(m)->gate.connection->value){
+	if (!INPUT(m)->gate.connection->value) {
 	  m->state=RELEASE;
 	  m->time=0;
 	  }
 	m->currentamp=arate*m->time;
         break;
       case DECAY:
-	if (!INPUT(m)->gate.connection->value){
+	if (!INPUT(m)->gate.connection->value) {
 	  m->state=RELEASE;
 	  m->time=0;
   	  }
-	if (m->time>=decay) {
+	if (m->time>=m->decay || m->decay==0) {
 	  m->state=SUSTAIN;
 	  m->time=0;
 	  }
@@ -82,19 +110,20 @@ static void tick(module *_m, int elapsed) {
 	  m->state=RELEASE;
 	  m->time=0;
   	  }
-	m->currentamp=convsus;
+	m->currentamp=suslevel;
         break;
       case RELEASE:
-	m->currentamp-=rrate;
-	if (m->currentamp<=0) {
-	  m->currentamp=0;
+	if (m->currentamp<=0 || m->release==0) {
 	  m->state=IDLE;
+	  m->currentamp=0;
+	  m->time=0;
    	  }
+	m->currentamp-=rrate;
         break;
       }
-
-    OUTPUT(m).int32_value=convert_out(m, m->currentamp);    
-
+    
+    OUTPUT(m).int32_value=convert_out(m, m->currentamp);
+    
     if (m->state!=IDLE)
       m->time+=elapsed;
     }
