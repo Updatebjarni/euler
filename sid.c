@@ -5,6 +5,11 @@
 
 #include"sid.spec.c"
 
+static int release_table[16]={
+  6, 24, 48, 72, 114, 168, 204, 240,
+  300, 750, 1500, 2400, 3000, 9000, 15000, 24000
+  };
+
 static struct{
   struct{
     union{struct{unsigned decay:4, attack:4;}; unsigned ad;};
@@ -16,7 +21,8 @@ static struct{
     union{struct{unsigned pw_lo:8, pw_hi:8;}; unsigned pw;};
     union{struct{unsigned freq_lo:8, freq_hi:8;}; unsigned freq;};
     int pw_changed, freq_changed;
-    }voice[3];
+int release_timeout; 
+   }voice[3];
   union{struct{unsigned vol:4, lp:1, bp:1, hp:1, mute3:1;}; unsigned modevol;};
   union{struct{unsigned filter:3, filtext:1, res:4;}; unsigned resfilt;};
   int modevol_changed, resfilt_changed;
@@ -94,6 +100,17 @@ static void tick(module *m, int elapsed){
         }
       if(voice->gate.connection)
         chip[chipno].voice[voiceno].gate=voice->gate.connection->value;
+      else
+        chip[chipno].voice[voiceno].gate=0;
+      if(chip[chipno].voice[voiceno].gate)
+        chip[chipno].voice[voiceno].release_timeout=
+          release_table[chip[chipno].voice[voiceno].release];
+      else{
+        if(chip[chipno].voice[voiceno].release_timeout)
+          --chip[chipno].voice[voiceno].release_timeout;
+        else
+          chip[chipno].voice[voiceno].ctrl&=0x0F;
+        }
       write_voice(chipno, voiceno, REG_FREQ_LO,
                   chip[chipno].voice[voiceno].freq_lo);
       write_voice(chipno, voiceno, REG_FREQ_HI,
