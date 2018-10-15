@@ -35,6 +35,9 @@ int main(int argc, char *argv[]){
   module *mog=create_module("mog", 0);
   run_module(mog);
 
+  using_history();
+  stifle_history(500);
+
   asprintf(&histfile, "%s/.euler_history", getenv("HOME"));
   read_history(histfile);
 
@@ -42,7 +45,6 @@ int main(int argc, char *argv[]){
     if(strcspn(line, " \t")){
       add_history(line);
       write_history(histfile);
-      history_truncate_file(histfile, 500);
       run_cmdline(line);
       }
     free(line);
