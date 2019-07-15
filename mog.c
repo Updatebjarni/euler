@@ -24,14 +24,15 @@ static int timers_head=0, timers_tail=0;
 static struct key_event *eventbuf[3];
 static int current=1;
 
-static union{
+static struct{
   unsigned short raw_bits[2];
-  struct{
-    union{
-      unsigned short word;
-      unsigned char byte[2];
-      }data;
+  union{
+    unsigned short cooked_bits[2];
     struct{
+      union{
+        unsigned short word;
+        unsigned char byte[2];
+        }data;
       unsigned short
         from       :6,
         last_part  :1,
@@ -43,7 +44,7 @@ static union{
     };
   }bschan[3];
 
-static void read_keys(unsigned short *buf){
+static void read_keys(){
   SELECT_MODULE(MOG_MODULE_NUMBER);
   MODULE_SET_REG(0);
   for(int i=0; i<10; ++i)
@@ -53,9 +54,11 @@ static void read_keys(unsigned short *buf){
   for(int i=0; i<3; ++i){
     bschan[i].raw_bits[0]=MODULE_READ();
     bschan[i].raw_bits[1]=MODULE_READ();
-    bschan[i].data.word&=0xFFF;
-    bschan[i].data.word|=(bschan[i].data_high<<12);
-    bschan[i].data_ready^=1;  // It's an active low signal, you see.
+    bschan[i].cooked_bits[0]=bschan[i].raw_bits[0]&0xFFF;
+    bschan[i].cooked_bits[1]=bschan[i].raw_bits[1];
+    bschan[i].cooked_bits[0]|=(bschan[i].data_high<<12);
+    bschan[i].data_ready=!(bschan[i].raw_bits[0]&0x8000);
+
     }
   }
 
@@ -112,6 +115,7 @@ static void tick(module *m, int elapsed){
   OUTPUT(m)->lower.key_events_value.len=buflen[LOWER];
   OUTPUT(m)->upper.key_events_value.len=buflen[UPPER];
   OUTPUT(m)->pedal.key_events_value.len=buflen[PEDAL];
+  if(bschan[0].data_ready)OUTPUT(m)->exp.int32_value=bschan[0].data.word;
   current=!current;
   }
 
@@ -132,6 +136,7 @@ static module *create(char **argv){
   OUTPUT(m)->lower.changed=1;
   OUTPUT(m)->upper.changed=1;
   OUTPUT(m)->pedal.changed=1;
+OUTPUT(m)->exp.changed=1;
   read_keys(keybits[!current]);
   return m;
   }
