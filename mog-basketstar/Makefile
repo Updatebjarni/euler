@@ -1,9 +1,9 @@
-FIRMWARES:=controller test-device
+FIRMWARES:=primary
 HEXFILES:=$(FIRMWARES:%=%.hex)
 
-all: $(HEXFILES)
+all: $(HEXFILES) bsselect
 	@echo -e '\ntext\tdata\tbss\tROM\tRAM'
-	@avr-size controller | \
+	@avr-size primary | \
 	  awk 'NR==2{print $$1"\t"$$2"\t"$$3"\t"$$1+$$2"\t"$$2+$$3}'
 
 $(HEXFILES): %.hex: %
@@ -15,13 +15,16 @@ $(FIRMWARES): %: %.o
 %.o: %.c
 	avr-gcc -c -mmcu=atmega328p -std=gnu99 -Os -Wall $<
 
-upload: controller.hex
-	avrdude -c arduino -p atmega328p -P /dev/ttyACM0 \
-	        -U flash:w:controller.hex
+bsselect: bsselect.c
+	gcc -Wall -o bsselect bsselect.c
 
 upload-test: test-device.hex
 #	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:test-device.hex
 	avrdude -B 5 -c arduino -p atmega328p -P /dev/ttyACM0 -U flash:w:test-device.hex
+
+upload: primary.hex
+	./bsselect 0
+	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:primary.hex
 
 clean:
 	rm -f $(HEXFILES) $(FIRMWARES) *.o

@@ -25,26 +25,57 @@ typedef struct mog_module{
 #define MOG_MODULE_NUMBER 16
 
 
+enum{LOWER=0, UPPER, PEDAL};
+
 struct debounce{
   int key, timer;
   };
 
-static unsigned short keybits[2][16];
-static unsigned short bouncemask[16]={0};
+static unsigned short keybits[2][10];
+static unsigned short bouncemask[10]={0};
 static struct debounce timers[12*10]={{-1, 0}};
 static int timers_head=0, timers_tail=0;
 #define HEAD timers[timers_head]
 
-static struct key_event *mog_out;
+static struct key_event *eventbuf[3];
 static int current=1;
+
+static union{
+  unsigned short raw_bits[2];
+  struct{
+    union{
+      unsigned short word;
+      unsigned char byte[2];
+      }data;
+    struct{
+      unsigned short
+        from       :6,
+        last_part  :1,
+        is_reply   :1,
+        data_high  :4,
+        _          :3,
+        data_ready :1;
+      };
+    };
+  }bschan[3];
 
 static void read_keys(unsigned short *buf){
   SELECT_MODULE(MOG_MODULE_NUMBER);
   MODULE_SET_REG(0);
-  for(int n=0; (n<16) && (!((*buf++=MODULE_READ())&0x8000)); ++n);
+  for(int i=0; i<10; ++i)
+    keybits[current][i]=MODULE_READ();
+  keybits[current][8]^=0xFFF;  // The pedal has the switches the other way,
+  keybits[current][9]^=0xFFF;  // so the bits need to be inverted.
+  for(int i=0; i<3; ++i){
+    bschan[i].raw_bits[0]=MODULE_READ();
+    bschan[i].raw_bits[1]=MODULE_READ();
+    bschan[i].data.word&=0xFFF;
+    bschan[i].data.word|=(bschan[i].data_high<<12);
+    bschan[i].data_ready^=1;  // It's an active low signal, you see.
+    }
   }
 
-volatile struct{int key; char ready;}single_grab;
+volatile struct{int key, keyboard; char ready;}single_grab;
 
 static void tick(module *_m, int elapsed){
   mog_module *m=(mog_module *)_m;
@@ -58,7 +89,7 @@ static void tick(module *_m, int elapsed){
 
   read_keys(keybits[current]);
 
-  int mog_out_len=0;
+  int buflen[3]={0, 0, 0};
 
   for(int i=0; i<10; ++i){
     unsigned short old, new, changed;
@@ -71,15 +102,19 @@ static void tick(module *_m, int elapsed){
 
     if(changed){
       for(int key=0; changed; ++key, changed>>=1){
-        int keynum=i*12+key+44;
+        int keynum=i*12+key, keyboard;
+        if(keynum<48){keyboard=LOWER; keynum+=44;}
+        else if(keynum<96){keyboard=UPPER; keynum+=8;}
+        else{keyboard=PEDAL; keynum-=76;}
         if(changed&1){
           if(!(new&(1<<key))){
             single_grab.key=keynum;
+            single_grab.keyboard=keyboard;
             single_grab.ready=1;
             }
-          mog_out[mog_out_len].key=keynum;
-          mog_out[mog_out_len].state=!!(new&(1<<key));
-          ++mog_out_len;
+          eventbuf[keyboard][buflen[keyboard]].key=keynum;
+          eventbuf[keyboard][buflen[keyboard]].state=!!(new&(1<<key));
+          ++buflen[keyboard];
 
           bouncemask[i]|=(1<<key);
           timers[timers_tail].key=i*12+key;

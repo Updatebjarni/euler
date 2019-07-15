@@ -1,10 +1,12 @@
-#define BAUD_TOL 3
-#define F_CPU 8000000
-#define BAUD 115200
+#define F_CPU 16000000
+#define BAUD 19200
 
 #define F_SCL 100000UL
 #define TWI_PRESCALE 1
 #define TWBR_VAL ((((F_CPU / F_SCL) / TWI_PRESCALE) - 16 ) / 2)
+
+#define TWIBITS ((1<<TWIE)|(1<<TWEN)|(1<<TWEA)|(1<<TWINT))
+#define ADCBITS ((1<<ADEN)|(1<<ADSC)|(1<<ADIE)|7)
 
 #include<stdio.h>
 #include<string.h>
@@ -14,64 +16,93 @@
 #include<util/setbaud.h>
 #include<avr/pgmspace.h>
 
-#define PRINTF(fmt, ...) printf_P(PSTR(fmt), ## __VA_ARGS__)
-
-int uart_putc(char c, FILE *stream){
-  while(!(UCSR0A&(1<<UDRE0)));
-  UDR0=c;
-  return 0;
-  }
-
-int uart_getc(FILE *stream){
-  int c;
-  do{
-    do{
-      if(UCSR0A&((1<<FE0)|(1<<DOR0)|(1<<UPE0))){
-        c=UDR0; UCSR0A&=~((1<<FE0)|(1<<DOR0)|(1<<UPE0));
-        }
-      }while(!(UCSR0A&(1<<RXC0)));
-    c=UDR0;
-    }while(c=='\r');
-  return c;
-  }
+volatile unsigned short sample;
+volatile char i2c_idle=1;
 
 ISR(TWI_vect){
+  switch(TWSR){
+    case 0x60:  // We are being addressed
+    case 0x68:  // We lost arbitration and are being addressed
+      TWCR=TWIBITS;
+//      recv_byteno=0;
+      return;
+    case 0x80:  // We have received data and acked them
+//      recv_buf[recv_byteno++]=TWDR;
+      TWCR=TWIBITS;
+//      if(recv_byteno<3)return;
+//      queue_mogward(recv_buf);
+      break;
+    case 0xA0:  // We have received a stop or repeated start
+      TWCR=TWIBITS;
+      break;
+    case 0x00:  // Bus error
+      TWCR=TWIBITS|(1<<TWSTO);
+      break;
+    }
 
+  }
+
+ISR(TIMER0_COMPA_vect){  // This interrupt is triggered about once per 10ms.
+  ADCSRA=ADCBITS;
+  }
+
+ISR(ADC_vect){
+  sample=ADCL|(ADCH<<8)|0x8000;
+  if(i2c_idle){
+    TWCR=TWIBITS|(1<<TWSTA);
+    i2c_idle=0;
+    }
   }
 
 int main(){
-  // ## Serial port ##
-  fdevopen(uart_putc, uart_getc);
-  UBRR0H=UBRRH_VALUE;
-  UBRR0L=UBRRL_VALUE;
-#if USE_2X
-  UCSR0A|=(1<<U2X0);
-#else
-  UCSR0A&=~(1<<U2X0);
-#endif
-  UCSR0C=3<<UCSZ00;
-  UCSR0B=(1<<RXEN0)|(1<<TXEN0);
 
   // I2C
   TWBR=TWBR_VAL;
   TWAR=(1<<1)|1;
-//  TWCR|=(1<<TWIE);
+  TWCR=(1<<TWEN)|(1<<TWIE)|(1<<TWEA);
+
+  // ADC
+  ADMUX=64;  // Internal AVcc reference, sample ADC0 pin
+  ADCSRA=ADCBITS;
+
+  // Timer
+  TCNT0=0;         // Initialise timer count.
+  OCR0A=155;       // Timer counts to 155, taking about 10ms at 16MHz/1 clock.
+  TCCR0A=2;        // "Clear timer on compare" mode
+  TCCR0B=5;        // Prescaler=1024. This starts the timer.
+  TIMSK0=2;        // Generate interrupt on compare match.
 
   DDRB=1;
+  PORTB=0;
+
+  sei();
 
   unsigned char count=0;
   while(1){
-    for(long i=0; i<100000; ++i);
-    PORTB^=1;
-    TWCR=0;
+    unsigned short tosend;
+    while(!(tosend=sample));
+    
+    tosend=(tosend*2)&0x7FF;
+
     TWCR=(1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
+
     TWDR=(112<<1)|0;
     TWCR=(1<<TWINT)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
-    TWDR=count++;
+
+    TWDR=1;  // Our address
     TWCR=(1<<TWINT)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
+
+    TWDR=tosend>>8;
+    TWCR=(1<<TWINT)|(1<<TWEN);
+    while(!(TWCR&(1<<TWINT)));
+
+    TWDR=tosend&255;
+    TWCR=(1<<TWINT)|(1<<TWEN);
+    while(!(TWCR&(1<<TWINT)));
+
     TWCR=(1<<TWINT)|(1<<TWSTO)|(1<<TWEN);
 //    while(!(TWCR&(1<<TWINT)));
     }
