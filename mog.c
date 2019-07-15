@@ -1,9 +1,25 @@
+/*
+*** kommentar om räknare för debouncing:
+
+det behövs en räknare som innehåller tiokompisen till summan av tiderna
+som är i kön för tillfället. den räknas upp med ett i slutet av varje
+runda i debouncerrutinen, tills den når 10, då kön är tom.
+
+när en ny räknare läggs till i kön sätts den till värdet från denna räknare,
+som sätts till 0.
+
+*/
+
 #include<stdlib.h>
 #include<unistd.h>
 #include"orgel.h"
 #include"orgel-io.h"
 
 #include"mog.spec.c"
+
+typedef struct mog_module{
+  MODULE_BASE
+  }mog_module;
 
 #define DEBOUNCE_TIME 10
 #define MOG_MODULE_NUMBER 16
@@ -64,7 +80,8 @@ static void read_keys(){
 
 volatile struct{int key, keyboard; char ready;}single_grab;
 
-static void tick(module *m, int elapsed){
+static void tick(module *_m, int elapsed){
+  mog_module *m=(mog_module *)_m;
   if(HEAD.key!=-1){
     if(!--HEAD.timer){
       bouncemask[HEAD.key/12]&=~(1<<(HEAD.key%12));
@@ -112,10 +129,9 @@ static void tick(module *m, int elapsed){
       }
     }
 
-  OUTPUT(m)->lower.key_events_value.len=buflen[LOWER];
-  OUTPUT(m)->upper.key_events_value.len=buflen[UPPER];
-  OUTPUT(m)->pedal.key_events_value.len=buflen[PEDAL];
-  if(bschan[0].data_ready)OUTPUT(m)->exp.int32_value=bschan[0].data.word;
+  m->output.lower.value.len=mog_out_len;
+// *** PROPAGATE OUTPUT
+
   current=!current;
   }
 
@@ -128,24 +144,17 @@ int mog_grab_key(){
 class mog_class;
 
 static module *create(char **argv){
-  module *m=malloc(sizeof(module));
-  default_module_init(m, &mog_class);
-  eventbuf[0]=OUTPUT(m)->lower.key_events_value.buf;
-  eventbuf[1]=OUTPUT(m)->upper.key_events_value.buf;
-  eventbuf[2]=OUTPUT(m)->pedal.key_events_value.buf; 
-  OUTPUT(m)->lower.changed=1;
-  OUTPUT(m)->upper.changed=1;
-  OUTPUT(m)->pedal.changed=1;
-OUTPUT(m)->exp.changed=1;
+  mog_module *m=malloc(sizeof(mog_module));
+  base_module_init(m, &mog_class);
+  mog_out=m->output.lower.value.buf;
   read_keys(keybits[!current]);
-  return m;
+  return (module *)m;
   }
 
 class mog_class={
-  "mog", "Människa-Orgel-Gränssnittet",
-  &input, &output,
-  tick, 0, 0,
-  STATIC_CLASS,
-  create,
-  0
+  .name="mog", .descr="Människa-Orgel-Gränssnittet",
+  .tick=tick, .destroy=0, .config=0,
+  .is_static=STATIC_CLASS,
+  .create=create,
+  .create_counter=0
   };

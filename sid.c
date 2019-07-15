@@ -5,6 +5,11 @@
 
 #include"sid.spec.c"
 
+
+typedef struct sid_module{
+  MODULE_BASE
+  }sid_module;
+
 static int release_table[16]={
   6, 24, 48, 72, 114, 168, 204, 240,
   300, 750, 1500, 2400, 3000, 9000, 15000, 24000
@@ -17,7 +22,6 @@ static struct{
     union{struct{unsigned gate:1, sync:1, ring:1, test:1,
                     triangle:1, saw:1, pulse:1, noise:1;};
           unsigned ctrl;};
-    int ad_changed, sr_changed, ctrl_changed;
     union{struct{unsigned pw_lo:8, pw_hi:8;}; unsigned pw;};
     union{struct{unsigned freq_lo:8, freq_hi:8;}; unsigned freq;};
     int pw_changed, freq_changed;
@@ -25,9 +29,7 @@ int release_timeout;
    }voice[3];
   union{struct{unsigned vol:4, lp:1, bp:1, hp:1, mute3:1;}; unsigned modevol;};
   union{struct{unsigned filter:3, filtext:1, res:4;}; unsigned resfilt;};
-  int modevol_changed, resfilt_changed;
   union{struct{unsigned fc_lo:3, fc_hi:8;}; unsigned cutoff;};
-  int cutoff_changed;
   }chip[3];
 
 enum{REG_FREQ_LO, REG_FREQ_HI, REG_PW_LO, REG_PW_HI, REG_CTRL, REG_AD, REG_SR,
@@ -42,66 +44,47 @@ static void write_voice(int chip, int voice, int reg, unsigned char val){
   write_chip(chip, voice*7+reg, val);
   }
 
-static void tick(module *m, int elapsed){
+static void tick(module *_m, int elapsed){
+  sid_module *m=(sid_module *)_m;
   SELECT_MODULE(1);
   for(int chipno=0; chipno<3; ++chipno){
-    struct input_chip_bundle *chipjacks=INPUT(m)->chip.INDEX(chipno);
-    if(chipjacks->vol.connection)
-      chip[chipno].vol=chipjacks->vol.connection->value;
-    if(chipjacks->hp.connection)
-      chip[chipno].hp=chipjacks->hp.connection->value;
-    if(chipjacks->bp.connection)
-      chip[chipno].bp=chipjacks->bp.connection->value;
-    if(chipjacks->lp.connection)
-      chip[chipno].lp=chipjacks->lp.connection->value;
-    if(chipjacks->mute3.connection)
-      chip[chipno].mute3=chipjacks->mute3.connection->value;
-    if(chipjacks->filtext.connection)
-      chip[chipno].filtext=chipjacks->filtext.connection->value;
-    if(chipjacks->res.connection)
-      chip[chipno].res=chipjacks->res.connection->value;
-    if(chipjacks->cutoff.connection)
-      chip[chipno].cutoff=chipjacks->cutoff.connection->value;
+    struct input_chip *chipjacks=&(m->input.chip[chipno]);
+    chip[chipno].vol=chipjacks->vol.value;
+    chip[chipno].hp=chipjacks->hp.value;
+    chip[chipno].bp=chipjacks->bp.value;
+    chip[chipno].lp=chipjacks->lp.value;
+    chip[chipno].mute3=chipjacks->mute3.value;
+    chip[chipno].filtext=chipjacks->filtext.value;
+    chip[chipno].res=chipjacks->res.value;
+    chip[chipno].cutoff=chipjacks->cutoff.value;
       
     for(int voiceno=0; voiceno<3; ++voiceno){
-      struct input_chip_voice_bundle *voice=
-        INPUT(m)->chip.INDEX(chipno)->voice.INDEX(voiceno);
-      if(voice->pulse.connection)
-        chip[chipno].voice[voiceno].pulse=voice->pulse.connection->value;
-      if(voice->triangle.connection)
-        chip[chipno].voice[voiceno].triangle=voice->triangle.connection->value;
-      if(voice->saw.connection)
-        chip[chipno].voice[voiceno].saw=voice->saw.connection->value;
-      if(voice->noise.connection)
-        chip[chipno].voice[voiceno].noise=voice->noise.connection->value;
-      if(voice->pw.connection)
-        chip[chipno].voice[voiceno].pw=voice->pw.connection->value;
-      if(voice->pitch.connection){
-        int pitch=voice->pitch.connection->value;
+      struct input_chip_voice *voice=
+        &(m->input.chip[chipno].voice[voiceno]);
+      chip[chipno].voice[voiceno].pulse=voice->pulse.value;
+      chip[chipno].voice[voiceno].triangle=voice->triangle.value;
+      chip[chipno].voice[voiceno].saw=voice->saw.value;
+      chip[chipno].voice[voiceno].noise=voice->noise.value;
+      chip[chipno].voice[voiceno].pw=voice->pw.value;
+      if(voice->pitch.valchanged){
+        int pitch=voice->pitch.value;
         pitch=pow(2, (1.0*pitch)/OCTAVE)*115.25;
         chip[chipno].voice[voiceno].freq=pitch;
+        voice->pitch.valchanged=0;
         }
-      if(voice->attack.connection)
-        chip[chipno].voice[voiceno].attack=voice->attack.connection->value;
-      if(voice->decay.connection)
-        chip[chipno].voice[voiceno].decay=voice->decay.connection->value;
-      if(voice->sustain.connection)
-        chip[chipno].voice[voiceno].sustain=voice->sustain.connection->value;
-      if(voice->release.connection)
-        chip[chipno].voice[voiceno].release=voice->release.connection->value;
+      chip[chipno].voice[voiceno].attack=voice->attack.value;
+      chip[chipno].voice[voiceno].decay=voice->decay.value;
+      chip[chipno].voice[voiceno].sustain=voice->sustain.value;
+      chip[chipno].voice[voiceno].release=voice->release.value;
 
-      if(voice->ringmod.connection)
-        chip[chipno].voice[voiceno].ring=voice->ringmod.connection->value;
-      if(voice->sync.connection)
-        chip[chipno].voice[voiceno].sync=voice->sync.connection->value;
-      if(voice->filter.connection){
+      chip[chipno].voice[voiceno].ring=voice->ringmod.value;
+      chip[chipno].voice[voiceno].sync=voice->sync.value;
+      if(voice->filter.valchanged){
         chip[chipno].filter&=~(1<<voiceno);
-        chip[chipno].filter|=((voice->filter.connection->value)<<voiceno);
+        chip[chipno].filter|=((voice->filter.value)<<voiceno);
+        voice->filter.valchanged=0;
         }
-      if(voice->gate.connection)
-        chip[chipno].voice[voiceno].gate=voice->gate.connection->value;
-      else
-        chip[chipno].voice[voiceno].gate=0;
+      chip[chipno].voice[voiceno].gate=voice->gate.value;
       if(chip[chipno].voice[voiceno].gate)
         chip[chipno].voice[voiceno].release_timeout=
           release_table[chip[chipno].voice[voiceno].release];
@@ -111,6 +94,7 @@ static void tick(module *m, int elapsed){
         else
           chip[chipno].voice[voiceno].ctrl&=0x0F;
         }
+
       write_voice(chipno, voiceno, REG_FREQ_LO,
                   chip[chipno].voice[voiceno].freq_lo);
       write_voice(chipno, voiceno, REG_FREQ_HI,
@@ -133,8 +117,6 @@ static void tick(module *m, int elapsed){
     }
   }
 
-class sid_class;
-
 static void debug(module *_m){
   for(int chipno=0; chipno<3; ++chipno){
     printf("Chip %d:  MODEVOL=%.2X  RESFILT=%.2X CUTOFF=%.2X:%.2X\n",
@@ -155,8 +137,8 @@ static void debug(module *_m){
     }
   }
 
-static void init(module *m){
-  LOCK_HARDWARE();
+static void reset(module *m){
+  LOCK_NEST();
   SELECT_MODULE(1);
   write_chip(7, 0, 0x00);
   for(int chip=0; chip<3; ++chip){
@@ -168,24 +150,23 @@ static void init(module *m){
       write_voice(chip, voice, REG_CTRL, 0x00);
       }
     }
-  UNLOCK_HARDWARE();
+  LOCK_UNNEST();
   }
 
+class sid_class;
+
 static module *create(char **argv){
-  module *m=malloc(sizeof(module));
-  default_module_init(m, &sid_class);
-  init(m);
-  return m;
+  sid_module *m=malloc(sizeof(sid_module));
+  base_module_init(m, &sid_class);
+  return (module *)m;
   }
 
 class sid_class={
-  "sid", "SID",
-  &input, &output,
-  tick, 0, 0,
-  STATIC_CLASS,
-  create,
-  0,
-  debug,
-  0,
-  init
+  .name="sid", .descr="SID",
+  .tick=tick, .destroy= 0, .config=0,
+  .is_static=STATIC_CLASS,
+  .create=create,
+  .create_counter=0,
+  .debug=debug,
+  .reset=reset
   };

@@ -144,29 +144,44 @@ void cmd_set(char **argv){
     printf("Input jack not found.\n");
     return;
     }
-  if(!is_terminal(j)){
-    printf("The jack is not a terminal.\n");
+  if(j->type==TYPE_LOGIC){
+    int val=strtologic(argv[2]);
+    if(val==-1){
+      printf("Invalid value \"%s\".\n", argv[2]);
+      return;
+      }
+    LOCK_NEST();
+    j->default_value.logic=val;
+    disconnect_jack(j);
+    LOCK_UNNEST();
     return;
     }
-  long n;
-  if(strtocv(argv[2], &n)){
-    printf("Invalid value \"%s\".\n", argv[2]);
+  if(j->type==TYPE_VIRTUAL_CV){
+    long val;
+    if(strtocv(argv[2], &val)){
+      printf("Invalid value \"%s\".\n", argv[2]);
+      return;
+      }
+    LOCK_NEST();
+    j->default_value.virtual_cv=val;
+    disconnect_jack(j);
+    LOCK_UNNEST();
     return;
     }
-  jack *constant;
-  constant=malloc(sizeof(jack));
-  constant->type=j->type;
-  if(j->type==TYPE_BOOL)
-    constant->out_terminal.bool_value=n;
-  else
-    constant->out_terminal.int32_value=n;
-  constant->parent_module=0;
-  constant->out_terminal.changed=1;
-  constant->out_terminal.connections=0;
-  constant->out_terminal.nconnections=0;
-  LOCK_MODULES();
-  connect_jacks(constant, j);
-  UNLOCK_MODULES();
+  if(j->type==TYPE_NUMBER){
+    long val;
+    char  *end;
+    val=strtol(argv[2], &end, 0);
+    if(*end){
+      printf("Invalid value \"%s\".\n", argv[2]);
+      return;
+      }
+    LOCK_NEST();
+    j->default_value.number=val;
+    disconnect_jack(j);
+    LOCK_UNNEST();
+    return;
+    }
   }
 
 void cmd_j(char **argv){
@@ -179,11 +194,14 @@ void cmd_j(char **argv){
     case TYPE_EMPTY:
       printf("type empty\n");
       break;
-    case TYPE_BOOL:
-      printf("type bool\n");
+    case TYPE_LOGIC:
+      printf("type logic\n");
       break;
-    case TYPE_INT32:
-      printf("type int32\n");
+    case TYPE_VIRTUAL_CV:
+      printf("type virtual_cv\n");
+      break;
+    case TYPE_NUMBER:
+      printf("type number\n");
       break;
     case TYPE_KEY_EVENTS:
       printf("type key_events\n");

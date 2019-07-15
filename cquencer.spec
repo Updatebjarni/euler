@@ -1,15 +1,15 @@
-in {
-    ticksperbeat: int32
+input {
+    ticksperbeat: number
     step: array(8) of {
-      pitch: int32
-      value1: int32
-      value2: int32
+      pitch: virtual_cv
+      value1: virtual_cv
+      value2: virtual_cv
     }
   }
 
-out {
-    pitch: int32
-    value1: int32
-    value2: int32
-    gate: bool
+output {
+    pitch: virtual_cv
+    value1: virtual_cv
+    value2: virtual_cv
+    gate: logic
   }

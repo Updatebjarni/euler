@@ -1,0 +1,267 @@
+
+
+UI:t presenterar ett gränssnitt för användaren genom vilket han kan
+skapa moduler och koppla samman dessa för att göra patchar. Han
+behöver kunna se vilka modulklasser som finns att välja mellan, och
+han behöver kunna se de moduler han har skapat och patchat upp. Han
+behöver kunna se varje moduls inputs och outputs, koppla dessa till
+varandra, och se vilka som är kopplade vart.
+
+Objekten som UI:t behöver hantera är: modulklasser, moduler, och jack,
+dvs modulernas inputs och outputs. Dessa representeras av strukt-
+typerna class, module, och jack, definierade i orgel.h. Notera att
+struct jack är definierad i headern med hjälp av makroinvokeringen
+JACK_TYPE(jack, jack_value); detta makro används också för att
+definiera ett antal specialiserade varianter av samma strukt.
+
+För att skriva ett GUI, skapa en egen katalog i källkodskatalogen,
+kalla den "foo-gui", där "foo" är namnet på guit, gör en egen makefil
+i denna nya katalog som har en default-target som bygger en fil som
+heter "gui.o", och en "clean"-target. gui.o behöver exportera en
+funktion:
+
+  int gui_main(int argc, char *argv[]);
+
+Denna anropas av huvudprogrammet med kommandoradsparametrarna från
+main(). Undvik att exportera något annat.
+
+För att bygga mjukvaran med guit, kör "make gui=foo". Guits makefil
+kommer att anropas automatiskt för att bygga gui.o.
+
+
+### KLASSER
+
+Typen class ser lite förenklat ut såhär:
+
+  typedef struct class{
+    char *name;     // Klassens unika namn, t.ex. sid, prio, keyboard
+    char *descr;    // Människoläslig beskrivning
+    int is_static;  // Flagga som säger om det är en statisk klass
+    ...
+    } class;
+
+    Statiska klasser kan bara ha en instans; de moduler som styr
+    hårdvara är instanser av statiska klasser.
+
+API:et för klasser ser ut såhär:
+
+  class *all_classes[];
+
+    En global lista över alla inkompilerade modulklasser; en
+    null-terminerad array.
+
+  class *find_class(char *name);
+
+    Slår upp en klass via dess namn.
+
+
+### MODULER
+
+Typen module ser lite förenklat ut såhär:
+
+  typedef struct module{
+    class *type;                             // Klassen modulen är instans av
+    char *name;                              // Modulens namn
+    void (*config)(module *m, char **argv);  // Klass-specifik konfiguration
+    void (*reset)(module *m);                // Nollställ och håll käften
+    jack *input_ptr, *output_ptr;            // Modulens I/O-jack
+    ...
+    }module;
+
+API:et för moduler ser ut såhär:
+
+  module **all_modules;
+  int nmodules;
+
+    En global lista över alla moduler. Den här arrayen är inte
+    null-terminerad, utan längden finns i nmodules.
+
+  module *create_module(char *class_name, char **argv);
+
+    Skapar en modul av en angiven klass och med angivna
+    parametrar. Parametrarna är optional och specifika för varje
+    klass. Modulen får automatiskt ett unikt namn på formatet
+    "klass-nummer". Detta kan man ersätta med ett annat namn om man
+    vill. Det är isåfall viktigt att namnet är unikt, att man freear
+    det gamla namnet, samt att det nya namnet är i mallocat minne.
+
+  void destroy_module(module *m);
+
+    Destruerar en modul.
+
+  module *find_module(char *name);
+
+    Slår upp en modul via unikt namn.
+
+  void run_module(module *);
+
+    Sätt modulen som körande. Varje tick evalueras de moduler som är
+    körande, och de moduler de får inputs från, rekursivt. Bara de
+    moduler som behöver köra men som inte har outputs kopplade till
+    andra moduler behöver vara körande, vilket alltså i princip
+    betyder hårdvarumoduler.
+
+  void stop_module(module *);
+
+    Stoppar en körande modul.
+
+
+### JACKS
+
+Moduler kommunicerar med varandra via s.k. jacks, som är
+mjukvarurepresentationen av patch-jacken på en modulär synt. Varje
+modul har alltså ett antal input-jack och ett antal output-jack, och
+användaren kan koppla ihop dem med varann för att göra patchar.
+
+Till skillnad från koden i modulerna så måste koden i UI:t använda den
+generiska metoden att interfejsa med jacks, för att kunna hantera alla
+olika modulers input- och output-strukturer. Detta betyder att man
+kommer åt alla jacks via generiska pekare av typen jack *, och att
+input- och output-träden är åtkomliga via modulstruktens medlemmar
+input_ptr och output_ptr, som pekar till respektive träds rot.
+
+Låt oss säga att vi har deklarerat en jack *j som pekar till ett jack
+i en moduls input- eller output-träd, och vill göra något med detta
+jack. Det första vi behöver titta på är j->type. Det finns då två fall
+där jacket är en icke-terminal nod med barn under sig i trädet:
+TYPE_BUNDLE och TYPE_ARRAY. Alla andra typer är terminaler, alltså löv
+i trädet, dvs jack där vi kan plugga in något.
+
+Låt oss först titta på de två icke-terminala fallen:
+
+  * j->type är TYPE_BUNDLE
+
+    I detta fall är jacket ett bundle, dvs det innehåller ett antal
+    namngivna jack som är dess barn i trädet, som en struct i C eller
+    en dictionary i Python. Antalet barn står då i j->len. Barnen
+    finns lagda omedelbart efter *j i minnet, så för att komma åt
+    barnen behöver vi bara indexera j. j[1] är det första barnet,
+    osv. Barnens namn finns i j[n].name. Exempel:
+
+      if(j->type==TYPE_BUNDLE){
+        printf("Ett bundle innehållande:\n");
+        for(int i=1; i<=j->len; ++j)
+          printf("  %s\n", j[i].name);
+        }
+
+  * j->type är TYPE_ARRAY
+
+    I detta fall är jacket en array innehållande ett antal icke
+    namngivna element, alla av identisk typ. j->len anger antalet
+    element i arrayen. Eftersom arrayen kan ha variabel längd ligger
+    den inte tillsammans med *j i minnet, utan är separat allokerad
+    och koms åt via pekaren j->array.
+
+    Här är det dock en liten gotcha: Det är inte alltid så att element
+    nummer n i arrayen finns på plats j->array[n] -- bundles tar ju
+    upp flera platser på raken. Lyckligtvis är ändå alla elementen
+    lika stora, så det räcker att kolla upp elementstorleken en gång
+    och sedan multiplicera sina index med denna. Antalet platser som
+    tas upp av ett bundle är bundlets len, plus 1 för själva bundle-
+    strukten. Terminaltyper har len satt till 0 för bekvämlighet, så
+    att man alltid kan beräkna storleken som len+1. Arrayer kan inte
+    nästlas, så det fallet behöver inte beaktas.
+
+    Elementtypen kan man finna i j->array_template, som är ett
+    mallelement som alltid finns, även om arrayen för närvarande har
+    längd 0. Använd således j->array_template->len + 1. Exempel:
+
+      if(j->type==TYPE_ARRAY){
+        int size=j->array_template->len+1;
+        for(int i=0; i<j->len; ++i){
+          /* gör något med  j->array[i*size]  */
+          }
+        }
+
+Den viktigaste typen av jack är dock terminalerna, där "patchkablarna"
+kopplas in. Detta är alla jacks som inte är bundles eller arrayer.
+Dessa har en värdetyp, som anges av j->type, samt ett värde,
+j->value. Det senare har typen union jack_value; se orgel.h. Typerna
+av värden som finns är för närvarande:
+
+    * TYPE_VIRTUAL_CV
+      Detta är en int32_t som representerar ett control voltage. Dessa
+      värden följer en virtuell 1V/oktav-standard, där 1V
+      representeras av ett numeriskt värde som finns definierat längst
+      upp i orgel.h tillsammans med några andra värden:
+
+        * VOLT representerar en virtuell volt. Det numeriska värdet
+          hos det här makrot är ungefär 134 miljoner, vilket med 32
+          bitar ger en bra balans mellan omfång och precision.
+        * OCTAVE är samma värde, enligt konventionen 1V/oktav.
+        * HALFNOTE representerar ett halvtonsteg.
+        * A440 representerar 440Hz, och är f.n. godtyckligt satt till
+          6*VOLT. Ett CV-värde på 0 är alltså också ett A, fast en bit
+          nedanför botten på det hörbara spektrumet.
+        * CVMAX är 10*VOLT. Värden ska ligga inom +/-CVMAX, precis
+          som analoga CV-signaler ska ligga inom +/-10V.
+
+          *** Med A440 satt till 6*VOLT ger CVMAX=10V ett tak på ungefär
+              7kHz. Borde A440 vara lägre, kanske 5*VOLT?
+
+    * TYPE_NUMBER
+      Också en int32_t, men avsedd att representera numeriska värden,
+      t.ex. för att välja mellan olika outputs etc.
+
+    * TYPE_LOGIC
+      En på/av-signal, lämplig för triggers och gates. 0 är av.
+
+    * TYPE_KEY_EVENTS
+      Ganska självförklarande.
+
+En modul som inte har några inputs eller inte har några outputs, har
+ett jack med typen TYPE_EMPTY för respektive träd.
+
+Jack-API:et ser ut som följer:
+
+  int connect_jacks(jack *out, jack *in);
+
+    Kopplar ihop två jack med varandra.
+
+  int disconnect_jack(jack *j);
+
+    Kopplar loss allting som är inkopplat till ett jack. Funktionen
+    kan användas för såväl inputs som outputs, och fungerar rekursivt
+    om jacket är ett bundle eller en array.
+
+  jack *find_jack(char *path, int dir);
+
+    Tar en sträng på formatet "modul/sökväg/till/jack", där arrayer
+    indexeras med [hakparenteser], samt ett värde dir, antingen DIR_IN
+    eller DIR_OUT, som anger om man letar efter ett input-jack eller
+    ett output-jack.
+
+  int is_terminal(jack *);
+
+    Returnerar 1 om jacket är en terminal.
+
+I jack-strukten finns bland annat:
+
+  uint32_t type:20;          // Jackets typ, som diskuterats ovan
+  char *name;                // Jackets namn om det är ett element i ett bundle
+  jack *parent_jack;         // Föräldern i trädet
+  module *parent_module;     // Modulen jacket tillhör
+
+  För terminaler:
+  jack_value value;          // Värdet, utgående eller inkommande
+  jack_value default_value;  // Vad värdet defaultar till när inget är ikopplat
+  Om input:
+  jack *connection;          // Pekare till inkopplat output-jack, eller 0
+  Om output:
+  jack **connections;        // Pekare till array av pekare till input-jack
+  int nconnections;          // Antal element i ovanstående array
+
+  För arrayer:
+  int len;                // Antalet element i arrayen
+  jack *array;            // Elementen; se ovan om indexering och storlek
+  jack *array_template;   // Typmall för elementen
+
+  För bundles:
+  int len;                // Antalet element i bundlet
+
+
+### TESTNING
+
+En not för testning: om man lägger till "hardware=no" på make-
+kommandoraden så byggs mjukvaran utan hårdvaru-I/O, så att man kan
+köra den på vilken dator som helst och inte bara på orgeln.

@@ -1,11 +1,11 @@
-in {
-    gate: bool
-    attack: int32
-    decay: int32
-    sustain: int32
-    release: int32
-    min: int32
-    max: int32
+input {
+    gate: logic
+    attack: virtual_cv
+    decay: virtual_cv
+    sustain: virtual_cv
+    release: virtual_cv
+    min: virtual_cv
+    max: virtual_cv
   }
 
-out int32
+output virtual_cv

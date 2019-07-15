@@ -1,32 +1,32 @@
-in {
+input {
   chip: array(3) of {
     voice: array(3) of {
-      pitch: int32
-      gate: bool
-      saw: bool
-      triangle: bool
-      pulse: bool
-      noise: bool
-      pw: int32
-      attack: int32
-      decay: int32
-      sustain: int32
-      release: int32
-      filter: bool
-      sync: bool
-      ringmod: bool
-      test: bool
+      pitch: virtual_cv
+      gate: logic
+      saw: logic
+      triangle: logic
+      pulse: logic
+      noise: logic
+      pw: virtual_cv
+      attack: virtual_cv
+      decay: virtual_cv
+      sustain: virtual_cv
+      release: virtual_cv
+      filter: logic
+      sync: logic
+      ringmod: logic
+      test: logic
       }
-    vol: int32
-    hp: bool
-    bp: bool
-    lp: bool
-    mute3: bool
-    res: int32
-    filtext: bool
-    cutoff: int32
+    vol: virtual_cv
+    hp: logic
+    bp: logic
+    lp: logic
+    mute3: logic
+    res: virtual_cv
+    filtext: logic
+    cutoff: virtual_cv
+    output_select: number
     }
-  mixer: int32
   }
 
-out empty
+output empty

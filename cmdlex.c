@@ -67,6 +67,19 @@ int strtocv(char *s, long *to){
   return 0;
   }
 
+int strtologic(char *s){
+  char *end;
+  long n=strtol(s, &end, 0);
+  if(!*end && (n==0 || n==1))return n;
+  if(!strcmp(s, "true") || !strcmp(s, "t") ||
+     !strcmp(s, "on") || !strcmp(s, "yes"))
+    return 1;
+  if(!strcmp(s, "false") || !strcmp(s, "nil") ||
+     !strcmp(s, "off") || !strcmp(s, "no"))
+    return 0;
+  return -1;
+  }
+
 int parse_parens(char ***argv, char ***paren){
   char **p=*argv;
   int parcount;
@@ -121,25 +134,11 @@ int parse_param(char ***argv, paramspec *specs){
             }
           return -1;
         case PARAM_FLAG:
-          n=strtol(*p, &end, 0);
-          if(!*end && (n==0 || n==1)){
-            specs[i].intval=n;
-            *argv=p+1;
-            return specs[i].number;
-            }
-          if(!strcmp(*p, "true") || !strcmp(*p, "t") ||
-             !strcmp(*p, "on") || !strcmp(*p, "yes")){
-            specs[i].intval=1;
-            *argv=p+1;
-            return specs[i].number;
-            }
-          if(!strcmp(*p, "false") || !strcmp(*p, "nil") ||
-             !strcmp(*p, "off") || !strcmp(*p, "no")){
-            specs[i].intval=0;
-            *argv=p+1;
-            return specs[i].number;
-            }
-          return -1;
+          n=strtologic(*p);
+          if(n==-1)return -1;
+          specs[i].intval=n;
+          *argv=p+1;
+          return specs[i].number;
         case PARAM_STRING:
           specs[i].strval=*p;
           *argv=p+1;

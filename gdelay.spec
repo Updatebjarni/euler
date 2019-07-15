@@ -1,6 +1,6 @@
-in {
-  gate: bool
-  delay: int32
+input {
+  gate: logic
+  delay: virtual_cv
   }
 
-out bool
+output logic

@@ -9,40 +9,33 @@
 
 
 typedef struct keyboard_module{
-  module;
+  MODULE_BASE
   int map[256], n;
   int *transpose;
   }keyboard_module;
 
+static void plugstatus(module *_m, jack *j){
+  keyboard_module *m=(keyboard_module *)_m;
+  if(j!=&m->input)return;
+  for(int i=0; i<m->n; ++i)
+    resize_key_events(
+      (jack *)&(m->output.range[i]),
+      m->input.connection->value.bufsize
+      );
+  }
+
 static void tick(module *_m, int elapsed){
   keyboard_module *m=(keyboard_module *)_m;
   for(int i=0; i<m->n; ++i)
-    OUTPUT(m)->range.INDEX(i).key_events_value.len=0;
-  if(INPUT(m).connection){
-    struct out_terminal *v=&(INPUT(m).connection->out_terminal);
-    for(int i=0; i<v->key_events_value.len; ++i){
-      key_event e=v->key_events_value.buf[i];
-      int range=m->map[e.key];
-      e.key+=m->transpose[range];
-      int pos=OUTPUT(m)->range.INDEX(range).key_events_value.len++;
-      OUTPUT(m)->range.INDEX(range).key_events_value.buf[pos]=e;
-      }
+    m->output.range[i].value.len=0;
+  for(int i=0; i<m->input.value.len; ++i){
+    key_event e=m->input.value.buf[i];
+    int range=m->map[e.key];
+    e.key+=m->transpose[range];
+    int pos=m->output.range[range].value.len++;
+    m->output.range[range].value.buf[pos]=e;
     }
-  OUTPUT(m)->range.INDEX(0).changed=1;
-  }
-
-static void attention(jack *j){
-  keyboard_module *m=(keyboard_module *)j->parent_module;
-
-  if(j==(jack *)&INPUT(m)){
-    if(INPUT(m).connection){
-      for(int i=0; i<m->n; ++i)
-        resize_key_events(
-          &(OUTPUT(m)->range.INDEX(i)),
-          INPUT(m).connection->out_terminal.key_events_value.bufsize
-          );
-      }
-    }
+  set_output(&m->output.range[0]);
   }
 
 class keyboard_class;
@@ -111,7 +104,7 @@ printf("range is unimplemented :(\n"); return 0;
     }
 
   keyboard_module *m=malloc(sizeof(keyboard_module));
-  default_module_init((module *)m, &keyboard_class);
+  base_module_init(m, &keyboard_class);
 
   for(int key=0, range=0; key<256; ++key){
     if(key>ranges[range].right)++range;
@@ -119,12 +112,7 @@ printf("range is unimplemented :(\n"); return 0;
     }
   free(ranges);
 
-  jack *rj=malloc(sizeof(jack[n]));
-  for(int i=0; i<n; ++i)
-    create_jack(rj+i, &output_range_template, DIR_OUT, m);
-  jack *a=(jack *)&(OUTPUT(m)->range);
-  a->array=rj;
-  a->len=n;
+  resize_jack(&m->output._range, n);
   m->n=n;
 
   m->transpose=malloc(sizeof(int)*n);
@@ -133,7 +121,7 @@ printf("range is unimplemented :(\n"); return 0;
 
   connect_jacks(source, &(m->input));
 
-  return m;
+  return (module *)m;
 
   syntax_error:
   printf("Syntax error.\n");
@@ -170,15 +158,15 @@ static void config(module *_m, char **argv){
   }
 
 class keyboard_class={
-  "keyboard",                           // name
-  "Plocka ut en del av ett klaviatur",  // descr
-  &input, &output,                      // default_input, default_output
-  tick,                                 // default_tick
-  0,                                    // default_destroy
-  config,                               // default_config
-  DYNAMIC_CLASS,                        // is_static
-  create,                               // create
-  0,                                    // create_counter
-  0,                                    // default_debug
-  attention                             // default_attention
+  .name="keyboard",
+  .descr="Plocka ut en del av ett klaviatur",
+  .tick=tick,
+  .destroy=0,
+  .config=config,
+  .is_static=DYNAMIC_CLASS,
+  .create=create,
+  .create_counter=0,
+  .debug=0,
+  .reset=0,
+  .plugstatus=plugstatus
   };

@@ -18,6 +18,10 @@ $(FIRMWARES): %: %.o
 bsselect: bsselect.c
 	gcc -Wall -o bsselect bsselect.c
 
+upload-test: test-device.hex
+#	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:test-device.hex
+	avrdude -B 5 -c arduino -p atmega328p -P /dev/ttyACM0 -U flash:w:test-device.hex
+
 upload: primary.hex
 	./bsselect 0
 	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:primary.hex \
