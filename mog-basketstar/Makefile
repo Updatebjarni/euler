@@ -19,8 +19,9 @@ upload: controller.hex
 	avrdude -c arduino -p atmega328p -P /dev/ttyACM0 \
 	        -U flash:w:controller.hex
 
-upload-test: upload test-device.hex
-	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:test-device.hex
+upload-test: test-device.hex
+#	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:test-device.hex
+	avrdude -B 5 -c arduino -p atmega328p -P /dev/ttyACM0 -U flash:w:test-device.hex
 
 clean:
 	rm -f $(HEXFILES) $(FIRMWARES) *.o
