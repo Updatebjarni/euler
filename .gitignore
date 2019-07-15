@@ -52,3 +52,7 @@ orgelperm
 
 # C source generated from module list
 all_modules.c
+
+mog-basketstar/test-device
+mog-basketstar/primary
+mog-basketstar/bstest

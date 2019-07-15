@@ -150,7 +150,7 @@ static module *create(char **argv){
 
   m=malloc(sizeof(prio_module));
   default_module_init((module *)m, &prio_class);
-  m->prio=PRIO_LAST;
+  m->prio=PRIO_STACK;
   m->alloc=ALLOC_RR;
   m->nheld=0;
   m->nvoices=1;

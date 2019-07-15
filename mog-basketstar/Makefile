@@ -1,4 +1,4 @@
-FIRMWARES:=primary
+FIRMWARES:=primary test-device
 HEXFILES:=$(FIRMWARES:%=%.hex)
 
 all: $(HEXFILES) bsselect
@@ -20,7 +20,11 @@ bsselect: bsselect.c
 
 upload: primary.hex
 	./bsselect 0
-	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:primary.hex
+	avrdude -B 5 -c usbasp -p atmega328p -U flash:w:primary.hex \
+	        -U lfuse:w:0xe2:m
+
+upload-test: test-device.hex
+	avrdude -c arduino -p atmega328p -P /dev/ttyACM0 -U flash:w:test-device.hex
 
 clean:
 	rm -f $(HEXFILES) $(FIRMWARES) *.o
