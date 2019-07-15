@@ -129,7 +129,9 @@ static void tick(module *_m, int elapsed){
       }
     }
 
-  m->output.lower.value.len=mog_out_len;
+  m->output.lower.value.len=buflen[LOWER];
+  m->output.upper.value.len=buflen[UPPER];
+  m->output.pedal.value.len=buflen[PEDAL];
 // *** PROPAGATE OUTPUT
 
   current=!current;
@@ -146,7 +148,6 @@ class mog_class;
 static module *create(char **argv){
   mog_module *m=malloc(sizeof(mog_module));
   base_module_init(m, &mog_class);
-  mog_out=m->output.lower.value.buf;
   read_keys(keybits[!current]);
   return (module *)m;
   }
