@@ -1,6 +1,6 @@
-in {
-  signal: int32
-  delay: int32
+input {
+  signal: virtual_cv
+  delay: virtual_cv
   }
 
-out int32
+output virtual_cv

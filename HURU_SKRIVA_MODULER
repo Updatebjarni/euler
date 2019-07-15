@@ -1,28 +1,297 @@
 
 
+### ÖVERBLICK
+
 För att skriva en modul gör man följande:
 
   * Skapar en C-fil som heter som modulen, t.ex. "na.c" för modulen "na".
-    Denna ska innehålla en globalt definierad class-strukt med namn enligt
-    mönstret "na_class".
+    Detta är själva implementationen av modulen och den innehåller all
+    programkod, men ska endast exportera en class-strukt, med namn
+    enligt mönstret "na_class", som är modulklassens API till systemet.
+    Allting annat i filen måste vara static. Mer om denna fil längre ner.
 
-  * Lägger till basnamnet, "na", i MODULES högst upp i makefilen.
+  * Skriver en na.spec som beskriver modulens input- och output-jack.
+    Titta i sid.spec för exempel på syntaxen. Mer om inputs och outputs
+    längre ner.
 
-  * Skriver en na.spec med specifikationer för inputs och outputs.
-    sid.spec är ett rätt bra exempel på syntaxen.
+  * Lägger till basnamnet, "na", i variabeln MODULES som finns längst
+    upp i makefilen.
 
-  * I na.c inkluderar man na.spec.c, som genereras från na.spec.
+Det är allt. Nedan följer detaljer.
 
-Se struct-typerna module och class i orgel.h.
+-----------------------------------
 
-I C-filen (na.c) fyller man i defaultvärden i klass-strukten. Se na.c
-för exempel på detta. När funktionen create_module() anropas allokerar
-den en modul-strukt och fyller i den med defaultvärdena från
-klass-strukten. Man behöver inte ange värden i strukten om man inte
-vill, och man får då harmlösa nullvärden.  Sedan anropar
-create_module() i sin tur klassens init-funktion, som får fylla i
-eller ändra värden om den vill. Den får också resten av kommandoraden
-och kan tolka parametrar därifrån om den behöver. Namnet på
-modulinstansen fixar create_module() själv, så det låter man bli att
-ändra på.
 
+Implementationen av en modul "xyz" består alltså av två filer:
+xyz.spec och xyz.c. Den senare innehåller själva programkoden, medans
+spec-filen innehåller en beskrivning med namn och typ för alla input-
+och output- jack som modulen har. Det är i dessa jack man kopplar
+sladdar i användargränssnittet, för att routa CV, noter, triggers, osv
+mellan moduler. Spec-filen kompileras till en C-fil med ett namn på
+formen "xyz.spec.c", som innehåller en datastruktur i C-källkodsform
+som beskriver alla inputs och outputs, avsedd att inkluderas i
+implementationsfilen xyz.c.
+
+
+### XYZ.C
+
+Detta är filen som implementerar modulen. Den innehåller i princip
+följande saker, som var och en behandlas i mer detalj längre ner:
+
+  * Definition av en klass-strukt, som innehåller modulklassens API
+    mot resten av orgeln: klassens namn och beskrivning, samt
+    konstruktor och andra metoder. Denna strukt är av typen class, och
+    har ett namn på formen xyz_class, och är det enda som ska
+    exporteras från xyz.c; alla andra globala symboler ska vara
+    static.
+
+  * #include"xyz.spec.c"
+
+  * Definition av en specialiserad strukt-typ för instanser av
+    modulen, kompatibel med den generiska typen module. Denna typ
+    används internt i xyz.c istället för module.
+
+  * En konstruktor, som systemet kan anropa för att skapa en instans
+    av modulklassen.
+
+  * En tick-funktion, som anropas av systemet varje tick, och som
+    utgör modulens huvudsakliga funktionalitet. Denna funktion läser
+    in inputs från input-jacken, gör eventuella beräkningar, skickar
+    eventuella kommandon till hårdvaran, och spottar ut outputs på
+    output-jacken.
+
+Ytterligare metoder och annat finns också. Fortsätt läsa.
+
+
+### MODUL-STRUKTEN
+
+Definitionen av den specialiserade strukt-typen för instanser av
+modulen ser ut på följande sätt:
+
+  typedef struct xyz_module{
+    MODULE_BASE
+    /* Här stoppar man de egna variabler en modulinstans behöver ha. */
+    }xyz_module;
+
+Den här typen kan man säga "ärver" typen module, och det är det som är
+syftet med makrot MODULE_BASE; detta makro innehåller medlemmarna i typen
+module, så att "subklassen" xyz_module blir kompatibel med den.
+
+MODULE_BASE deklarerar också de två jackträden "input" och "output",
+med de jacktyper som definieras i xyz.spec.c, som alltså behöver vara
+inkluderad ovanför definitionen av modulstrukten. Som resultat kommer
+man åt sina jack som xyz_module.input respektive xyz_module.output.
+
+All ytterligare state som behövs per instans av ens modulklass
+deklarerar man i sin modulstrukt xyz_module.
+
+
+### KONSTRUKTORN
+
+Därefter skriver man en konstruktor för sin modulklass. Här är ett exempel
+taget från mog.c:
+
+  static module *create(char **argv){
+    mog_module *m=malloc(sizeof(mog_module));
+    base_module_init(m, &mog_class);
+    mog_out=m->output.lower.value.buf;
+    read_keys(keybits[!current]);
+    return (module *)m;
+    }
+
+Observera alltså att man allokerar minne för sin egen modulstrukttyp,
+men returnerar pekaren som en module-pekare. Notera också bruket av
+base_module_init(), som utför initialisering av innehållet i
+"basklassen" module, bland annat jacken. Därefter gör man vad helst
+för ytterligare initialisering som behövs för ens egen klass. Om man
+vill kan man ta emot kommandoradsparametrar i argv. Det är valfritt.
+Sedan returnerar man pekaren till den nya instansen.
+
+
+### TICK-FUNKTIONEN
+
+Den andra funktionen som definitivt behöver finnas för att modulen ska
+göra något är tick(). Denna funktion anropas av realtidstråden en gång
+varje tick, dvs varje millisekund. Den tar två parametrar; den första är
+pekaren till modulinstansen, och borde vara självförklarande. Den andra
+är en int elapsed, som upplyser tick() om hur många ticks som har passerat
+sen sist funktionen anropades. Normalt är värdet alltid 1, men om ett
+tick av någon anledning har hoppats över (hög last på processorn, eller
+ett lås som var låst) så kan värdet vara högre. Enklare moduler behöver
+inte bry sig om elapsed, men informationen finns där om man behöver göra
+någon typ av noggrann realtidsbaserad beräkning, t.ex. i en sequencer eller
+envelopegenerator.
+
+Funktionen tick() ansvarar för hela den egentliga funktionaliteten hos
+modulen. Den läser av modulens input-jack, gör beräkningar, och skriver
+outputs till output-jacken.
+
+Ett typiskt sätt att börja tick-funktionen är på följande sätt:
+
+  static void tick(module *_m, int elapsed){
+    xyz_module *m=(xyz_module *)_m;
+
+    ...
+    }
+
+Därefter använder man m för att accessa sin moduls state och jacks.
+
+
+### KLASS-API:T I ÖVRIGT
+
+Förutom create() och tick() kan man också skapa några till funktioner; se
+definitionen av class-strukten i orgel.h. Den viktigaste är förmodligen
+destroy(), som är destruktorn. Den behövs dock bara om man behöver
+destruera sina egendefinierade data; "basklassen" destrueras ändå.
+
+Där finns också en funktion debug() som man kan implementera om man vill
+tillhandahålla stöd för debug-kommandot. Implementerar man den så ska den
+helt enkelt skriva ut nån sorts nyttig debuginformation om modulens state.
+
+Sedan finns config(), som tar en argv med konfigurationsparametrar som man
+får parsa för att konfigurera om sin modul. Den är också helt optional.
+Om man implementerar den så har man nytta för parse_param() för att hjälpa
+till med parsandet. Se t.ex. prio.c för ett exempel på en config-funktion.
+
+Till sist finns en funktion som heter reset(), och som helt enkelt syftar
+till att få modulen att hålla käft och bete sig. Detta kan vara användbart
+om man har fått orgeln att låta och vill få tyst på den direkt; då kör man
+kommandot "shutup", som anropar reset() på alla moduler som implementerar
+den.
+
+I övrigt finns i class-strukten en char *name, som är namnet som mjukvaran
+använder för modulklassen; dvs "sid" för SID-modulen, "xyz" om din modul
+heter "xyz", osv. Det finns också en char *descr, som är en kortfattad
+människobegriplig beskrivning av vad modulen är.
+
+Det finns också en int is_static. Om ens klass är statisk, dvs det ska
+bara kunna finnas en instans av den (typiskt för moduler som kontrollerar
+hårdvara), sätter man denna variabel till STATIC_CLASS; annars sätter man
+den till DYNAMIC_CLASS.
+
+Det finns också en create_counter som säger hur många instanser av klassen
+det finns. Den initialiseras till 0 av base_module_init().
+
+
+### CLASS-STRUKTEN
+
+Definitionen av class-strukten sker lämpligen längst ner i källkoden,
+eftersom den behöver referera till en bunt funktioner i samma fil. Dock
+behöver den vara *deklarerad* innan create()-funktionen, eftersom denna
+anropar base_module_init(m, &xyz_class), så i praktiken ser slutet av ens
+xyz.c ut ungefär såhär:
+
+  class xyz_class;
+
+  static module *create(char **argv){
+    xyz_module *m=malloc(sizeof(xyz_module));
+    base_module_init(m, &xyz_class);
+    ...
+    return (module *)m;
+    }
+  
+  class xyz_class={
+    .name="xyz", .descr="En XYZ-mojäng",
+    .tick=tick, .destroy= 0, .config=0,
+    .is_static=DYNAMIC_CLASS,
+    .create=create,
+    .create_counter=0,
+    .debug=0,
+    .reset=0
+    };
+
+Notera alltså att allting i filen utom just den här class-strukten ska
+deklareras static, så att det inte skitar ner namnrymden för resten av
+orgeln.
+
+
+### HUR I/O-JACK FUNKAR
+
+  I sin modulstrukt har man två medlemmar som heter input och
+  output. Dessa genereras automatiskt och motsvarar de input- och
+  output-specifikationer man har skrivit i spec-filen. Man kommer åt
+  alla namngivna jacks med vanlig strukt-syntax, och array-element med
+  hakparenteser, precis som vanligt i C:
+
+    sid_module *m;
+    m->input.chip[i].voice[j].pitch
+    m->input.chip[i].vol
+
+  Dessa har automatiskt rätt jack-typ enligt typspecifikationerna i
+  spec-filen.
+
+  # INPUT
+
+  I huvudsak är det man behöver veta om input-jack, att värdet på
+  inputten alltid finns att läsa i jack.value; detta är ett värde som
+  kommit från en annan moduls output om någon är inkopplad, eller ett
+  defaultvärde om jacket är okopplat:
+
+    m->input.chip[1].vol.value  // Volymvärdet för SID-chip nr 1
+
+  Det finns också en flagga "valchanged" som sätts till 1 om inputten
+  har ändrats. Om man behöver göra mycket beräkningar när en input
+  ändras kan det vara värt att titta på denna flagga, endast göra om
+  sina beräkningar om det är 1, och sedan nollställa den igen.
+
+  Skulle man vilja ha olika beteende beroende på om något är inkopplat
+  eller inte kan man titta på "connection", som är en pekare till den
+  modul som är inkopplad om det är någon; i annat fall är den NULL.
+
+  För typerna virtual_cv, number, och logic är inputvärdet en enkel
+  skalär och ganska självförklarande. För jacks av typen key_events är
+  värdet en strukt med medlemmarna len och buf. len säger hur många
+  events som har kommit in, och buf är en array med events. Typen för
+  dessa är struct key_event, som innehåller ett nummer, key, som
+  identifierar vilken not eventet avser, samt en flagga, state, som
+  säger om eventet är KEY_DOWN eller KEY_UP. Notnumren börjar från A:t
+  vid 6,875Hz, precis som CV. A440 är alltså not nummer 72.
+
+  Om man vill kan man implementera klassmetoden plugstatus(), som
+  anropas av systemet när ett jack kopplas in eller kopplas ur. Det
+  finns också en funktionspekare med samma namn, plugstatus, i varje
+  jack, som man kan sätta själv att peka till olika funktioner för
+  olika jacks om man har lust.
+
+  *** Eventuellt skulle vi i framtiden kunna lägga till nåt mer
+      avancerat system för att meddela en modul vilka inputs som har
+      ändrats. Just nu får modulen helt enkelt kolla alla inputs och
+      antingen läsa värdena varje tick eller kolla valchanged. Det är
+      inte otänkbart att det kan leda till ineffektiv kod, som kunde
+      förbättras med något event-orienterat system.
+
+
+### SPEC-FILENS SYNTAX
+
+Syntaxen för spec-filen är enkel. Filen består av två specifikationer;
+en för input och en för output:
+
+  input <typ>
+  output <typ>
+
+Typerna är som följer:
+
+  virtual_cv
+  number
+  logic
+  key_events(<n>)           # n anger storleken på bufferten
+  array(<n>) of <typ>       # t.ex. array(5) of virtual_cv
+  { <namn>: <typ> ... }     # bundle
+  empty                     # om modulen inte använder detta jack
+
+Givetvis kan dessa nästlas:
+
+  input {
+    chip: array(3) of {
+      voice: array(3) of {
+        pitch: virtual_cv
+        ...
+        }
+      vol: virtual_cv
+      ...
+      }
+    }
+
+Arrayer kan inte nästlas i arrayer, och bundles kan inte nästlas i
+bundles, men som du ser är det inget problem att nästla ett bundle in
+en array i ett bundle, till exempel.

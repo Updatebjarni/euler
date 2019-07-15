@@ -13,7 +13,7 @@
 
 #include"all_modules.c"
 
-int modules_lock, hardware_lock;
+int rt_lock, rt_lock_count;
 
 module **all_modules;
 int nmodules;
@@ -69,31 +69,28 @@ class *find_class(char *name){
   return 0;
   }
 
-void default_module_init(module *m, class *c){
+void base_module_init(module *m, class *c,
+                      jack *input, jack *input_template,
+                      jack *output, jack *output_template){
   m->type=c;
   m->name=0;
-  m->tick=c->default_tick;
-  m->destroy=c->default_destroy;
-  m->config=c->default_config;
-  m->debug=c->default_debug;
-  m->attention=c->default_attention;
-  m->init=c->default_init;
-  if(c->default_input)
-    create_jack(&m->input, c->default_input, DIR_IN, m);
-  else
-    m->input.type=TYPE_EMPTY;
-  if(c->default_output)
-    create_jack(&m->output, c->default_output, DIR_OUT, m);
-  else
-    m->output.type=TYPE_EMPTY;
+  m->tick=c->tick;
+  m->destroy=c->destroy;
+  m->config=c->config;
+  m->debug=c->debug;
+  m->reset=c->reset;
+  create_jack(input, input_template, m);
+  m->input_ptr=input;
+  create_jack(output, output_template, m);
+  m->output_ptr=output;
   m->last_updated=0;
   }
 
 void cmd_shutup(char **argv){
   for(int i=0; i<nmodules; ++i){
     stop_module(all_modules[i]);
-    if(all_modules[i]->type->is_static && all_modules[i]->init)
-      all_modules[i]->init(all_modules[i]);
+    if(all_modules[i]->type->is_static && all_modules[i]->reset)
+      all_modules[i]->reset(all_modules[i]);
     }
   }
 
@@ -104,23 +101,18 @@ module *create_module(char *class_name, char **argv){
   class *c=find_class(class_name);
   if(!c || (c->is_static && c->create_counter))return 0;
 
-  if(!c->create){
-    m=malloc(sizeof(module));
-    default_module_init(m, c);
-    }
-  else
-    m=c->create(argv);
+  m=c->create(argv);
 
   ++(c->create_counter);
   if(c->is_static)
     m->name=strdup(class_name);
   else
     asprintf(&(m->name), "%s-%d", class_name, c->create_counter);
-  LOCK_MODULES();
+  LOCK_NEST();
   all_modules=realloc(all_modules, sizeof(all_modules[0])*(nmodules+1));
   all_modules[nmodules]=m;
   ++nmodules;
-  UNLOCK_MODULES();
+  LOCK_UNNEST();
   return m;
   }
 
@@ -166,12 +158,29 @@ void cmd_create(char **argv){
   return;
   }
 
+void destroy_module(module *m){
+  disconnect_jack(m->input_ptr);
+  disconnect_jack(m->output_ptr);
+  LOCK_NEST();
+  for(int i=0; i<nmodules; ++i)
+    if(all_modules[i]==m){
+      all_modules[i]=all_modules[--nmodules];
+      break;
+      }
+  LOCK_UNNEST();
+  if(m->destroy)m->destroy(m);
+  destroy_jack(m->input_ptr);
+  destroy_jack(m->output_ptr);
+  free(m->name);
+  free(m);
+  }
+
 void run_module(module *m){
-  LOCK_MODULES();
+  LOCK_NEST();
   running=realloc(running, sizeof(module[nrunning+1]));
   running[nrunning]=m;
   ++nrunning;
-  UNLOCK_MODULES();
+  LOCK_UNNEST();
   }
 
 const char help_run[]="Set a module as running. Usage: run <module>\n";
@@ -185,10 +194,10 @@ void cmd_run(char **argv){
 void stop_module(module *m){
   for(int i=0; i<nrunning; ++i)
     if(running[i]==m){
-      LOCK_MODULES();
+      LOCK_NEST();
       running[i]=running[--nrunning];
       running=realloc(running, sizeof(running[0])*nrunning);
-      UNLOCK_MODULES();
+      LOCK_UNNEST();
       return;
       }
   }
@@ -207,11 +216,11 @@ static int oddeven;
 
 static void jack_depend(jack *j){
   if((j->type==TYPE_EMPTY) || is_terminal(j)){
-    if(!(j->in_terminal.connection))return;
-    module *m=j->in_terminal.connection->parent_module;
+    if(!(j->connection))return;
+    module *m=j->connection->parent_module;
     if(!m)return;
     if(m->last_updated!=oddeven){
-      jack_depend(&(m->input));
+      jack_depend(m->input_ptr);
       m->tick(m, 1);
       m->last_updated=oddeven;
       }
@@ -219,13 +228,13 @@ static void jack_depend(jack *j){
   else{
     if(j->type==TYPE_ARRAY){
       jack *e=j->array;
+      int size=j->array->len+1;
       for(int i=0; i<j->len; ++i)
-        jack_depend(e+i);
+        jack_depend(e+i*size);
       }
     else if(j->type==TYPE_BUNDLE){
-      named_jack *e=j->bundle;
-      for(int i=0; i<j->len; ++i)
-        jack_depend(&(e[i].element));
+      for(int i=1; i<=j->len; ++i)
+        jack_depend(j+i);
       }
     }
   }
@@ -237,16 +246,13 @@ static void *rt_thread(void *data){
   while(1){
     if(quit)return 0;
 
-    if(!TRY_LOCK_MODULES()){
-      if(!TRY_LOCK_HARDWARE()){
-        for(int i=0; i<nrunning; ++i){
-          jack_depend(&(running[i]->input));
-          running[i]->tick(running[i], 1);
-          running[i]->last_updated=oddeven;
-          }
-        UNLOCK_HARDWARE();
+    if(!TRY_LOCK_EXCL()){
+      for(int i=0; i<nrunning; ++i){
+        jack_depend(running[i]->input_ptr);
+        running[i]->tick(running[i], 1);
+        running[i]->last_updated=oddeven;
         }
-      UNLOCK_MODULES();
+      UNLOCK();
       }
     oddeven=1-oddeven;
 
@@ -266,19 +272,23 @@ void start_rt(void){
   struct sched_param sched;
   pthread_attr_t attr;
 
+#ifndef NO_HARDWARE
   if(mlockall(MCL_CURRENT|MCL_FUTURE)<0){
     fprintf(stderr, "mlockall(): %m\n");
     exit(1);
     }
+#endif
 
   pthread_attr_init(&attr);
+#ifndef NO_HARDWARE
   pthread_attr_setstacksize(&attr, 1024*1024);
   pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
   pthread_attr_getschedparam(&attr, &sched);
   sched.sched_priority=80;
   pthread_attr_setschedparam(&attr, &sched);
   pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
-  pthread_create(&thread, &attr, rt_thread, NULL);
+#endif
+  fprintf(stderr, "cr %s\n", strerror(pthread_create(&thread, &attr, rt_thread, NULL)));
   pthread_attr_destroy(&attr);
   }
 
@@ -295,16 +305,18 @@ void cmd_show(char **argv){
     }
   printf("%s module \"%s\" (of class \"%s\"):\n",
          m->type->is_static?"Static":"Dynamic", m->name, m->type->name);
-  if(m->input.type!=TYPE_EMPTY){
+  if(m->input_ptr->type!=TYPE_EMPTY){
     printf("input: ");
-    show_jack(&m->input, DIR_IN, 0);
+    show_jack(m->input_ptr, DIR_IN, 0);
     }
-  if(m->output.type!=TYPE_EMPTY){
+  if(m->output_ptr->type!=TYPE_EMPTY){
     printf("output: ");
-    show_jack(&m->output, DIR_OUT, 0);
+    show_jack(m->output_ptr, DIR_OUT, 0);
     }
-  if(m->output.type==TYPE_EMPTY)printf("(This module provides no output)\n");
-  if(m->input.type==TYPE_EMPTY)printf("(This module takes no input)\n");
+  if(m->output_ptr->type==TYPE_EMPTY)
+    printf("(This module provides no output)\n");
+  if(m->input_ptr->type==TYPE_EMPTY)
+    printf("(This module takes no input)\n");
   }
 
 const char help_show[]=

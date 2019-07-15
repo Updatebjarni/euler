@@ -1,7 +1,7 @@
-in {
-  frequency: int32
-  amplitude: int32
-  waveform: int32
+input {
+  frequency: virtual_cv
+  amplitude: virtual_cv
+  waveform: number
   }
 
-out int32
+output virtual_cv

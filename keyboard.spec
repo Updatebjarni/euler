@@ -1,5 +1,5 @@
-in key_events
+input key_events
 
-out {
+output {
   range: array(0) of key_events(0)
   }

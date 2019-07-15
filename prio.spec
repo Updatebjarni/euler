@@ -1,10 +1,10 @@
-in key_events
+input key_events
 
-out {
+output {
   monophone: array(1) of {
-    pitch: int32
-    gate: bool
-    trigger: bool
+    pitch: virtual_cv
+    gate: logic
+    trigger: logic
     }
-  multitrig: bool
+  multitrig: logic
   }

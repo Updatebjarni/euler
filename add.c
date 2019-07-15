@@ -5,31 +5,31 @@
 #include"add.spec.c"
 
 
-static void tick(module *m, int elapsed){
-  if(INPUT(m)->signal.connection && INPUT(m)->control.connection){
-    int64_t result=(int64_t)(INPUT(m)->signal.connection->value);
-    result+=INPUT(m)->control.connection->value;
-    if(result>INT32_MAX)result=INT32_MAX;
-    if(result<INT32_MIN)result=INT32_MIN;
-    OUTPUT(m).int32_value=result;
-    }
+typedef struct add_module{
+  MODULE_BASE
+  }add_module;
+
+static void tick(module *_m, int elapsed){
+  add_module *m=(add_module *)_m;
+  int64_t result=(int64_t)(m->input.signal.value);
+  result+=m->input.control.value;
+  if(result>INT32_MAX)result=INT32_MAX;
+  if(result<INT32_MIN)result=INT32_MIN;
+  m->output.value=result;
   }
 
-/*
-static int init(module *m, char **argv){
+class add_class;
 
+static module *create(char **argv){
+  add_module *m=malloc(sizeof(add_module));
+  base_module_init(m, &add_class);
+  return (module *)m;
   }
-*/
 
 class add_class={
-  "add",                     // char *name
-  "Add two signals",         // char *descr
-  &input,                    // jack *default_input
-  &output,                   // jack *default_output
-  tick,                      // void (*default_tick)(module *, int elapsed)
-  0,                         // void (*default_destroy)(module *)
-  0,                         // void (*default_config)(module *, char **)
-  DYNAMIC_CLASS,             // int is_static
-  0,                         // int (*init)(module *, char **)
-  0                          // int create_counter
+  .name="add",
+  .descr="Add two signals",
+  .create=create,
+  .tick=tick,
+  .is_static=DYNAMIC_CLASS,
   };

@@ -6,7 +6,7 @@
 #include"slew.spec.c"
 
 typedef struct slew_module{
-  module;
+  MODULE_BASE
   int value;
   }slew_module;
 
@@ -17,42 +17,33 @@ static int min(int a, int b){
 static void tick(module *_m, int elapsed){
   slew_module *m=(slew_module *)_m;
 
-  if(INPUT(m)->signal.connection && INPUT(m)->rate.connection){
-    int32_t signal=(INPUT(m)->signal.connection->value);
-    int32_t rate=(INPUT(m)->rate.connection->value);
+  int32_t signal=m->input.signal.value;
+  int32_t rate=m->input.rate.value;
 
-    if (rate < 0) rate=0;
+  if (rate < 0) rate=0;
     
-    if (m->value > signal)
-      m->value-= min(m->value - signal, rate);
+  if (m->value > signal)
+    m->value-= min(m->value - signal, rate);
 
-    if (m->value < signal)
-      m->value+= min(signal - m->value, rate);
+  if (m->value < signal)
+    m->value+= min(signal - m->value, rate);
 
-    OUTPUT(m).int32_value=m->value;
-    }
+  m->output.value=m->value;
   }
 
 class slew_class;
 
 static module *create(char **argv){
-  slew_module *m;
-
-  m=malloc(sizeof(slew_module));
-  default_module_init((module *)m, &slew_class);
+  slew_module *m=malloc(sizeof(slew_module));
+  base_module_init(m, &slew_class);
   m->value=0;
   return (module *)m;
   }
 
 class slew_class={
-  "slew",                     // char *name
-  "Portamento effect",        // char *descr
-  &input,                    // jack *default_input
-  &output,                   // jack *default_output
-  tick,                      // void (*default_tick)(module *, int elapsed)
-  0,                         // void (*default_destroy)(module *)
-  0,                         // void (*default_config)(module *, char **)
-  DYNAMIC_CLASS,             // int is_static
-  create,                    // module*(*create)(char **)
-  0                          // int create_counter
+  .name="slew",
+  .descr="Portamento effect",
+  .tick=tick,
+  .is_static=DYNAMIC_CLASS,
+  .create=create
   };

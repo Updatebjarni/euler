@@ -12,6 +12,7 @@
 #include<signal.h>
 #include<readline/readline.h>
 #include<readline/history.h>
+#include<dlfcn.h>
 
 #include"orgel.h"
 #include"orgel-io.h"
@@ -24,6 +25,7 @@ void require_orgelperm(int foo){
 
 int main(int argc, char *argv[]){
   char *line, *histfile=0;
+  int ret=0;
 
   orgelperm_argv=malloc(sizeof(argv[0])*(argc+2));
   memcpy(orgelperm_argv+1, argv, sizeof(argv[0])*(argc+1));
@@ -32,23 +34,31 @@ int main(int argc, char *argv[]){
   SELECT_MODULE(0);
 
   start_rt();
+
   module *mog=create_module("mog", 0);
   run_module(mog);
 
-  asprintf(&histfile, "%s/.euler_history", getenv("HOME"));
-  read_history(histfile);
+  void *dl=dlopen(0, RTLD_LAZY);
+  int (*gui_main)(int argc, char *argv[])=dlsym(dl, "gui_main");
 
-  while((line=readline("euler> "))){
-    if(strcspn(line, " \t")){
-      add_history(line);
-      write_history(histfile);
-      history_truncate_file(histfile, 500);
-      run_cmdline(line);
+  if(gui_main)
+    ret=gui_main(argc, argv);
+  else{
+    asprintf(&histfile, "%s/.euler_history", getenv("HOME"));
+    read_history(histfile);
+
+    while((line=readline("euler> "))){
+      if(strcspn(line, " \t")){
+        add_history(line);
+        write_history(histfile);
+        history_truncate_file(histfile, 500);
+        run_cmdline(line);
+        }
+      free(line);
       }
-    free(line);
     }
 
   stop_rt();
 
-  return 0;
+  return ret;
   }
