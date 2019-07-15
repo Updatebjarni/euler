@@ -1,5 +1,6 @@
+#define BAUD_TOL 3
 #define F_CPU 16000000
-#define BAUD 19200
+#define BAUD 115200
 
 #define F_SCL 100000UL
 #define TWI_PRESCALE 1
@@ -16,6 +17,7 @@
 #include<util/setbaud.h>
 #include<avr/pgmspace.h>
 
+<<<<<<< HEAD
 volatile unsigned short sample;
 volatile char i2c_idle=1;
 
@@ -41,6 +43,8 @@ ISR(TWI_vect){
     }
 
   }
+=======
+>>>>>>> f1b5456f034bc6ccd0b14d59a833ecaf5ae1d0f6
 
 ISR(TIMER0_COMPA_vect){  // This interrupt is triggered about once per 10ms.
   ADCSRA=ADCBITS;
@@ -59,30 +63,16 @@ int main(){
   // I2C
   TWBR=TWBR_VAL;
   TWAR=(1<<1)|1;
-  TWCR=(1<<TWEN)|(1<<TWIE)|(1<<TWEA);
-
-  // ADC
-  ADMUX=64;  // Internal AVcc reference, sample ADC0 pin
-  ADCSRA=ADCBITS;
-
-  // Timer
-  TCNT0=0;         // Initialise timer count.
-  OCR0A=155;       // Timer counts to 155, taking about 10ms at 16MHz/1 clock.
-  TCCR0A=2;        // "Clear timer on compare" mode
-  TCCR0B=5;        // Prescaler=1024. This starts the timer.
-  TIMSK0=2;        // Generate interrupt on compare match.
+//  TWCR|=(1<<TWIE);
+  TWCR=1<<TWEN;
 
   DDRB=1;
   PORTB=0;
 
-  sei();
-
   unsigned char count=0;
   while(1){
-    unsigned short tosend;
-    while(!(tosend=sample));
-    
-    tosend=(tosend*2)&0x7FF;
+    for(long i=0; i<5000; ++i);
+    PORTB^=1;
 
     TWCR=(1<<TWINT)|(1<<TWSTA)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
@@ -91,15 +81,15 @@ int main(){
     TWCR=(1<<TWINT)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
 
-    TWDR=1;  // Our address
+    TWDR=count++;
     TWCR=(1<<TWINT)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
 
-    TWDR=tosend>>8;
+    TWDR=count++;
     TWCR=(1<<TWINT)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
 
-    TWDR=tosend&255;
+    TWDR=count++;
     TWCR=(1<<TWINT)|(1<<TWEN);
     while(!(TWCR&(1<<TWINT)));
 

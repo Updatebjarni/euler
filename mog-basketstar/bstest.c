@@ -13,14 +13,15 @@ static unsigned short keybits[2][10];
 
 static int current=1;
 
-static union{
+static struct{
   unsigned short raw_bits[2];
-  struct{
-    union{
-      unsigned short word;
-      unsigned char byte[2];
-      }data;
+  union{
+    unsigned short cooked_bits[2];
     struct{
+      union{
+        unsigned short word;
+        unsigned char byte[2];
+        }data;
       unsigned short
         from       :6,
         last_part  :1,
@@ -37,20 +38,25 @@ static void read_keys(){
   MODULE_SET_REG(0);
   for(int i=0; i<10; ++i){
     keybits[current][i]=MODULE_READ();
-    printf("%04X ", keybits[current][i]);
+//    printf("%04X ", keybits[current][i]);
     }
-putchar('\n');
+//  putchar('\n');
   keybits[current][8]^=0xFFF;  // The pedal has the switches the other way,
   keybits[current][9]^=0xFFF;  // so the bits need to be inverted.
   for(int i=0; i<3; ++i){
     bschan[i].raw_bits[0]=MODULE_READ();
     bschan[i].raw_bits[1]=MODULE_READ();
-printf("%04X %04X ", bschan[i].raw_bits[0], bschan[i].raw_bits[1]);
+    bschan[i].cooked_bits[0]=bschan[i].raw_bits[0]&0xFFF;
+    bschan[i].cooked_bits[1]=bschan[i].raw_bits[1];
+    bschan[i].cooked_bits[0]|=(bschan[i].data_high<<12);
+    bschan[i].data_ready=!(bschan[i].raw_bits[0]&0x8000);
+
+//printf("%04X %04X ", bschan[i].raw_bits[0], bschan[i].raw_bits[1]);
 //    bschan[i].data.word&=0xFFF;
 //    bschan[i].data.word|=(bschan[i].data_high<<12);
 //    bschan[i].data_ready^=1;  // It's an active low signal, you see.
     }
-putchar('\n');
+//putchar('\n');
   }
 
 char **orgelperm_argv;
@@ -74,11 +80,16 @@ int main(int argc, char *argv[]){
 
   while(1){
     read_keys();
-    printf("%04X:%04X\n", bschan[0].raw_bits[0], bschan[0].raw_bits[1]);
-    out(bschan[0].data.byte[0]);
-    out(bschan[0].data.byte[1]);
-    out(bschan[0].raw_bits[1]&255);
-    putchar('\n');
-    for(int i=0; i<100000000; ++i);
+    if(bschan[0].data_ready){
+      printf("%02X %02X %02X %04X\n", bschan[0].raw_bits[1]&255,
+                                 bschan[0].data.byte[0],
+                                 bschan[0].data.byte[1],
+                                 bschan[0].data.word);
+//      out(bschan[0].data.byte[0]);
+//      out(bschan[0].data.byte[1]);
+//      out(bschan[0].raw_bits[1]&255);
+//      putchar('\n');
+      }
+    for(int i=0; i<10000000; ++i);
     }
   }
