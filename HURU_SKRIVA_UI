@@ -23,7 +23,15 @@ funktion:
   int gui_main(int argc, char *argv[]);
 
 Denna anropas av huvudprogrammet med kommandoradsparametrarna från
-main(). Undvik att exportera något annat.
+main(). Undvik att exportera något annat. Ett enkelt sätt att bygga
+ihop sitt gui till en objektfil och samtidigt slänga alla symboler
+utom gui_main är med ett kommando i stil med:
+
+  ld -shared --retain-symbols-file=export.sym -o gui.o ...
+
+Istället för "..." stoppar man alla objektfiler och bibliotek som guit
+består av. I filen export.sym stoppar man helt enkelt "gui_main" på en
+egen rad.
 
 För att bygga mjukvaran med guit, kör "make gui=foo". Guits makefil
 kommer att anropas automatiskt för att bygga gui.o.
