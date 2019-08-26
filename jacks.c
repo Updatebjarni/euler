@@ -116,6 +116,7 @@ int resize_jack(jack *j, int len){
           j->array[i].connections[con]->connection=j->array+i;
     for(int i=j->len; i<len; ++i)
       create_jack(j->array+(i*size), j->array_template, j->parent_module);
+    j->len=len;
     }
   else{            // Shorten the array
     for(int i=len; i<j->len; ++i)
