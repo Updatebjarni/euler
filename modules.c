@@ -79,6 +79,7 @@ void base_module_init(module *m, class *c,
   m->config=c->config;
   m->debug=c->debug;
   m->reset=c->reset;
+  m->plugstatus=c->plugstatus;
   create_jack(input, input_template, m);
   m->input_ptr=input;
   create_jack(output, output_template, m);
@@ -102,6 +103,7 @@ module *create_module(char *class_name, char **argv){
   if(!c || (c->is_static && c->create_counter))return 0;
 
   m=c->create(argv);
+  if(!m)return 0;
 
   ++(c->create_counter);
   if(c->is_static)
@@ -288,7 +290,7 @@ void start_rt(void){
   pthread_attr_setschedparam(&attr, &sched);
   pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
 #endif
-  fprintf(stderr, "cr %s\n", strerror(pthread_create(&thread, &attr, rt_thread, NULL)));
+  pthread_create(&thread, &attr, rt_thread, NULL);
   pthread_attr_destroy(&attr);
   }
 
