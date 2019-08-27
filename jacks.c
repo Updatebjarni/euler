@@ -227,7 +227,7 @@ int disconnect_jack(jack *j){
         disconnect_jack(j->array+i*size);
       break;
     case TYPE_BUNDLE:
-      for(int i=0; i<j->len; ++i)
+      for(int i=1; i<=j->len; ++i)
         disconnect_jack(j+i);
       break;
     default:
