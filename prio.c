@@ -79,6 +79,7 @@ static void tick(module *_m, int elapsed){
       if(m->held[i].changed){
         int voice=m->held[i].voice;
         m->output.monophone[voice].pitch.value=m->held[i].key*HALFNOTE;
+        set_output(&m->output.monophone[voice].pitch);
         m->output.monophone[voice].gate.value=1;
         set_output(&m->output.monophone[voice].gate);
         }

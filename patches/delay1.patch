@@ -9,7 +9,7 @@ set slew-1/rate 1000000
 set gdelay-1/delay 500
 set sdelay-1/delay 500
 
-create prio
+create prio(voices=1)
 connect mog/lower prio-1
 
 connect prio-1/monophone[0]/pitch slew-1/signal

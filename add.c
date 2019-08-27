@@ -16,6 +16,7 @@ static void tick(module *_m, int elapsed){
   if(result>INT32_MAX)result=INT32_MAX;
   if(result<INT32_MIN)result=INT32_MIN;
   m->output.value=result;
+  set_output(&m->output);
   }
 
 class add_class;
