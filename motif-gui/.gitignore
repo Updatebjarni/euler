@@ -1,0 +1,56 @@
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+xmtest
+
+# Debug files
+*.dSYM/
+
+# Emacs-auto-backup
+*~
+
+# Emacs auto-save
+\#*#
+
+# Emacs desktop files
+.emacs.desktop
+.emacs.desktop.lock
+
+# C source generated from .spec files by jackspec
+*.spec.c
+
+# Testing patch files can be kept in the root directory
+/*.patch
+
+# C source generated from module list
+all_modules.c
+
+mog-basketstar/test-device
+mog-basketstar/primary
+mog-basketstar/bstest
