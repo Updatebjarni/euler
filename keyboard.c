@@ -17,11 +17,12 @@ typedef struct keyboard_module{
 static void plugstatus(module *_m, jack *j){
   keyboard_module *m=(keyboard_module *)_m;
   if(j!=&m->input)return;
-  for(int i=0; i<m->n; ++i)
+  for(int i=0; i<m->n; ++i){
     resize_key_events(
       (jack *)&(m->output.range[i]),
       m->input.connection->value.bufsize
       );
+    }
   }
 
 static void tick(module *_m, int elapsed){
@@ -50,14 +51,15 @@ static module *create(char **argv){
   char *sourcename, *end;
   int i=0, *points;
   struct{unsigned char left, right;} *ranges;
+  char *dummy=0;
+  if(!argv)argv=&dummy;
+  char *kbdname=(*argv)?(*argv):"lower";
 
-  if(*argv){
-    asprintf(&sourcename, "mog/%s", *argv);
-    if((source=find_jack(*argv, DIR_OUT)) ||
-       (source=find_jack(sourcename, DIR_OUT)))
-      ++argv;
-    free(sourcename);
-    }
+  asprintf(&sourcename, "mog/%s", kbdname);
+  if((source=find_jack(kbdname, DIR_OUT)) ||
+     (source=find_jack(sourcename, DIR_OUT)))
+    ++argv;
+  free(sourcename);
 
   if(*argv && !strcmp(*argv, "split")){
     ++argv;
@@ -99,8 +101,10 @@ static module *create(char **argv){
 printf("range is unimplemented :(\n"); return 0;
     }
   else{
-    printf("Specify one of \"range\" and \"split\".\n");
-    return 0;
+    n=1;
+    ranges=malloc(sizeof(ranges[0])*1);
+    ranges[0].left=0;
+    ranges[0].right=255;
     }
 
   keyboard_module *m=malloc(sizeof(keyboard_module));

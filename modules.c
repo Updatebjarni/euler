@@ -97,6 +97,18 @@ void cmd_shutup(char **argv){
 
 const char help_shutup[]="Makes the synth modules shut up.\n";
 
+void clear_all(void){
+  cmd_shutup(0);
+  for(int i=0; i<nmodules; ++i)
+    destroy_module(all_modules[i]);
+  }
+
+void cmd_clear(char **argv){
+  clear_all();
+  }
+
+const char help_clear[]="Stops and unloads all modules.\n";
+
 module *create_module(char *class_name, char **argv){
   module *m;
   class *c=find_class(class_name);
