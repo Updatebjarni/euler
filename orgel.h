@@ -164,15 +164,15 @@ int e_min(int a, int b);
   base_module_init((module *)M, C, \
                    (jack *)&(M->input), (jack *)&input, \
                    (jack *)&(M->output),(jack *)&output)
-#define is_terminal(j) is_terminal((jack *)j)
-#define connect_jacks(out, in) connect_jacks((jack *)out, (jack *)in)
-#define disconnect_jack(j) disconnect_jack((jack *)j)
+#define is_terminal(j) is_terminal((jack *)(j))
+#define connect_jacks(out, in) connect_jacks((jack *)(out), (jack *)(in))
+#define disconnect_jack(j) disconnect_jack((jack *)(j))
 #define create_jack(to, template, m) \
-        create_jack((jack *)to, (jack *)template, (module *)m)
-#define resize_jack(j, len) resize_jack((jack *)j, len)
-#define show_jack(j, dir, indent) show_jack((jack *)j, dir, indent)
-#define set_output(j) set_output((jack *)j)
-#define resize_key_events(j, bufsize) resize_key_events((jack *)j, bufsize)
+        create_jack((jack *)(to), (jack *)(template), (module *)(m))
+#define resize_jack(j, len) resize_jack((jack *)(j), len)
+#define show_jack(j, dir, indent) show_jack((jack *)(j), dir, indent)
+#define set_output(j) set_output((jack *)(j))
+#define resize_key_events(j, bufsize) resize_key_events((jack *)(j), bufsize)
 #endif
 
 
