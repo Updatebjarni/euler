@@ -148,6 +148,9 @@ class mog_class;
 static module *create(char **argv){
   mog_module *m=malloc(sizeof(mog_module));
   base_module_init(m, &mog_class);
+  eventbuf[LOWER]=m->output.lower.value.buf;
+  eventbuf[UPPER]=m->output.upper.value.buf;
+  eventbuf[PEDAL]=m->output.pedal.value.buf;
   read_keys(keybits[!current]);
   return (module *)m;
   }
