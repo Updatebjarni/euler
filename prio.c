@@ -114,8 +114,9 @@ static void config(module *_m, char **argv){
   m->voices=realloc(m->voices, sizeof(int)*n);
   for(int i=0; i<n; ++i)
     m->voices[i]=i;
-  for(int i=0; i<m->output._monophone.len; ++i)
+  for(int i=0; i<m->output._monophone.len; ++i){
     disconnect_jack(m->output.monophone+i);
+    }
   m->output._monophone.len=n;
 // *** This might move the array and break the pointers pointing
 //     here from the inputs:

@@ -131,6 +131,7 @@ void start_rt(void);
 void stop_rt(void);
 void run_module(module *);
 void stop_module(module *);
+void clear_all(void);
 module *find_module(char *name);
 class *find_class(char *name);
 void base_module_init(module *m, class *c,

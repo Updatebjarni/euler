@@ -148,7 +148,7 @@ Låt oss först titta på de två icke-terminala fallen:
 
       if(j->type==TYPE_BUNDLE){
         printf("Ett bundle innehållande:\n");
-        for(int i=1; i<=j->len; ++j)
+        for(int i=1; i<=j->len; ++i)
           printf("  %s\n", j[i].name);
         }
 

@@ -168,9 +168,15 @@ void show_jack(jack *j, int dir, int indent){
     }
   }
 
+jack *jack_index(jack *j, int i){
+  if(j->type!=TYPE_ARRAY || j->len<=i)return 0;
+  return j->array+i*(j->array_template->len+1);
+  }
+
 static jack *lookup(jack *j, char *name){
-  for(int i=1; i<=j->len; ++i)
+  for(int i=1; i<=j->len; ++i){
     if(!strcmp(name, j[i].name))return j+i;
+    }
   return 0;
   }
 
@@ -190,7 +196,7 @@ jack *find_jack(char *_pathstr, int dir){
     if(!j)goto done;
     if(array_syntax){
       if(j->type!=TYPE_ARRAY || j->len<=n){j=0; goto done;}
-      j=j->array+(n*(j->array->len+1));
+      j=j->array+(n*(j->array_template->len+1));
       }
     }
 done:
@@ -321,7 +327,6 @@ void cmd_connect(char **argv){
   jack *in=find_jack(argv[2], DIR_IN);
   if(!in){
     printf("Input jack \"%s\" not found.\n", argv[2]);
-printf("(to be connected to %s)\n", argv[1]);
     return;
     }
   LOCK_NEST();

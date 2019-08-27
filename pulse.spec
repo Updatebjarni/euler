@@ -1,7 +1,7 @@
-in {
+input {
     gate: bool
     length: int32
     height: int32
   }
 
-out int32
+output int32

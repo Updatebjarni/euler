@@ -40,6 +40,8 @@ void cmd_debug(char **);
 extern const char help_debug[];
 void cmd_shutup(char **);
 extern const char help_shutup[];
+void cmd_clear(char **);
+extern const char help_clear[];
 
 struct command commands[]={
   {"quit", cmd_quit, help_quit},
@@ -61,7 +63,8 @@ struct command commands[]={
   {"load", cmd_load, help_load},
   {"echo", cmd_echo, help_echo},
   {"shutup", cmd_shutup, help_shutup},
-  {"debug", cmd_debug, help_debug}
+  {"debug", cmd_debug, help_debug},
+  {"clear", cmd_clear, help_clear}
   };
 
 int ncommands=sizeof(commands)/sizeof(commands[0]);
@@ -122,6 +125,7 @@ void cmd_load(char **argv){
     printf("Could not open file.\n");
     return;
     }
+  clear_all();
   char *line=0;
   size_t len=0;
   errno=0;
