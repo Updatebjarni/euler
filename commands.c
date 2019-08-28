@@ -116,6 +116,7 @@ void run_cmdline(char *line){
   }
 
 void cmd_load(char **argv){
+fprintf(stderr, "cmd_load()\n");
   if(!argv[1]){
     printf("No filename given.\n");
     return;
@@ -133,6 +134,13 @@ void cmd_load(char **argv){
     if(line[strlen(line)-1]=='\n')
       line[strlen(line)-1]=0;
     run_cmdline(line);
+module *m=find_module("prio-1");
+if(m && 0){
+ fprintf(stderr, "foere\n");
+ free(m->input_ptr);
+ fprintf(stderr, "efter\n");
+ }
+
     }
   if(errno)perror(argv[1]);
   fclose(f);

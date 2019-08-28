@@ -82,6 +82,9 @@ void base_module_init(module *m, class *c,
   m->plugstatus=c->plugstatus;
   create_jack(input, input_template, m);
   m->input_ptr=input;
+//fprintf(stderr, "foere 3\n");
+//free(m->input_ptr);
+//fprintf(stderr, "efter 3\n");
   create_jack(output, output_template, m);
   m->output_ptr=output;
   m->last_updated=0;
@@ -99,8 +102,14 @@ const char help_shutup[]="Makes the synth modules shut up.\n";
 
 void clear_all(void){
   cmd_shutup(0);
-  for(int i=0; i<nmodules; ++i)
-    destroy_module(all_modules[i]);
+  for(int i=0; i<nmodules;)
+    if(all_modules[i]->type->is_static)
+      ++i;
+    else
+      destroy_module(all_modules[i]);
+  for(class **c=all_classes; *c; ++c)
+    if(!((*c)->is_static))
+      (*c)->create_counter=0;
   }
 
 void cmd_clear(char **argv){
@@ -112,7 +121,9 @@ const char help_clear[]="Stops and unloads all modules.\n";
 module *create_module(char *class_name, char **argv){
   module *m;
   class *c=find_class(class_name);
-  if(!c || (c->is_static && c->create_counter))return 0;
+  if(!c)return 0;
+  if(c->is_static && c->create_counter)
+    return find_module(class_name);
 
   m=c->create(argv);
   if(!m)return 0;

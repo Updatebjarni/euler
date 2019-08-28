@@ -147,6 +147,9 @@ static module *create(char **argv){
 
   m=malloc(sizeof(prio_module));
   base_module_init(m, &prio_class);
+//fprintf(stderr, "foere 2\n");
+//free(m->input_ptr);
+//fprintf(stderr, "efter 2\n");
   m->prio=PRIO_STACK;
   m->alloc=ALLOC_RR;
   m->nheld=0;

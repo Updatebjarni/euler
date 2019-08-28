@@ -90,16 +90,15 @@ void destroy_jack(jack *j){
     int size=j->array->len+1;
     for(int i=0; i<j->len; ++i)
       destroy_jack(j->array+i*size);
+    free(j->array);
     }
   else if(j->type==TYPE_BUNDLE){
-    for(int i=0; i<j->len; ++i)
+    for(int i=1; i<=j->len; ++i)
       destroy_jack(j+i);
     }
   else if(j->type==TYPE_KEY_EVENTS){
     free(j->value.key_events.buf);
     }
-  free(j->name);
-  free(j);
   }
 
 int resize_jack(jack *j, int len){
@@ -120,7 +119,7 @@ int resize_jack(jack *j, int len){
     }
   else{            // Shorten the array
     for(int i=len; i<j->len; ++i)
-      destroy_jack(j+(i*size));
+      destroy_jack(j->array+(i*size));
     j->len=len;
     if(!len){
       free(j->array);
