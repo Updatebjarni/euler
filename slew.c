@@ -29,6 +29,7 @@ static void tick(module *_m, int elapsed){
     m->value+= min(signal - m->value, rate);
 
   m->output.value=m->value;
+  set_output(&m->output);
   }
 
 class slew_class;
