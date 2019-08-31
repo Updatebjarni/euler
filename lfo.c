@@ -55,6 +55,7 @@ static void tick(module *_m, int elapsed){
     
   m->time+=elapsed;
   m->output.value=value;
+  set_output(&m->output);
   }
 
 class lfo_class;

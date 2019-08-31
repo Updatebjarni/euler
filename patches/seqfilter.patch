@@ -21,7 +21,7 @@ connect cquencer-1/gate sid/chip[2]/voice[0]/gate
 connect cquencer-1/pitch sid/chip[2]/cutoff
 
 set sid/chip[2]/vol 15
-set sid/chip[2]/hp 1
+set sid/chip[2]/lp 1
 set sid/chip[2]/voice[0]/filter 1
 set sid/chip[2]/voice[0]/noise 1
 set sid/chip[2]/voice[0]/attack 0

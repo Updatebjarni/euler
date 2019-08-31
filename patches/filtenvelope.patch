@@ -9,7 +9,7 @@ connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
 connect prio-1/monophone[0]/gate adsr-1/gate
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
 
-set adsr-1/attack 0
+set adsr-1/attack 300
 set adsr-1/decay 200
 set adsr-1/sustain 100
 set adsr-1/release 200

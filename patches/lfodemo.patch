@@ -1,19 +1,25 @@
 create sid
 create add
+create add
 create lfo
+create prio(voices=1)
+connect mog/lower prio-1
 
-set lfo-1/frequency 100
+set lfo-1/frequency 400
 set lfo-1/amplitude 1024
 set lfo-1/waveform 2
 
+connect prio-1/monophone[0]/pitch add-2/signal
+set add-2/control -134200000
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+
 set add-1/signal 2048
-set sid/chip[0]/voice[0]/gate 1
+connect add-2 sid/chip[0]/voice[0]/pitch
 
 connect add-1 sid/chip[0]/voice[0]/pw
 connect lfo-1 add-1/control
 
 set sid/chip[0]/vol 12
-set sid/chip[0]/voice[0]/pitch 500000000
 set sid/chip[0]/voice[0]/pulse 1
 set sid/chip[0]/voice[0]/attack 0
 set sid/chip[0]/voice[0]/decay 4

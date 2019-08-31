@@ -115,6 +115,7 @@ static void tick(module *_m, int elapsed) {
     }
     
   m->output.value=convert_out(m, m->currentamp);
+  set_output(&m->output);
 
   if (m->state!=IDLE)
     m->time+=elapsed;
