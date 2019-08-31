@@ -31,6 +31,7 @@ static void tick(module *_m, int elapsed){
   m->gate[0]=gate;
     
   m->output.value=m->gate[delay];
+  set_output(&m->output);
   }
 
 class gdelay_class;

@@ -1,26 +1,23 @@
 create sid
 create add
 create lfo
-create slew
 create gdelay
 create sdelay
 
-set slew-1/rate 1000000
 set gdelay-1/delay 500
 set sdelay-1/delay 500
 
 create prio(voices=1)
 connect mog/lower prio-1
 
-connect prio-1/monophone[0]/pitch slew-1/signal
-connect prio-1/monophone[0]/gate gdelay-1/gate 
-connect gdelay-1 sid/chip[1]/voice[0]/gate
+connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
 
-connect slew-1 sdelay-1/signal
-connect slew-1 sid/chip[0]/voice[0]/pitch
-connect sdelay-1 sid/chip[1]/voice[0]/pitch
+connect prio-1/monophone[0]/pitch sdelay-1/signal 
+connect prio-1/monophone[0]/gate gdelay-1/gate 
 
+connect gdelay-1 sid/chip[1]/voice[0]/gate
+connect sdelay-1 sid/chip[1]/voice[0]/pitch
 
 set sid/chip[0]/vol 15
 set sid/chip[0]/voice[0]/pulse 1
