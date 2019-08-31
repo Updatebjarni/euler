@@ -15,16 +15,19 @@ typedef struct cquencer_module{
 static void pstep(int input, cquencer_module *m){
   int32_t p = m->input.step[input].pitch.value;
   m->output.pitch.value=p;
+  set_output(&m->output.pitch);
 }
 
 static void v1step(int input, cquencer_module *m){
   int32_t p = m->input.step[input].value1.value;
   m->output.value1.value=p;
+  set_output(&m->output.value1);
 }
   
 static void v2step(int input, cquencer_module *m){
   int32_t p = m->input.step[input].value2.value;
   m->output.value2.value=p;
+  set_output(&m->output.value2);
 }
 
 static void tick(module *_m, int elapsed){
@@ -44,6 +47,7 @@ static void tick(module *_m, int elapsed){
   v1step(step, m);
   v2step(step, m);
   m->output.gate.value=gate;
+  set_output(&m->output.gate);
 
   m->time+=elapsed;
 }
