@@ -13,6 +13,7 @@ typedef struct prio_module{
   int nheld;
   int *voices;
   int nvoices, nplaying;
+  int debug_down, debug_up;
   }prio_module;
  
 static void tick(module *_m, int elapsed){
@@ -22,6 +23,7 @@ static void tick(module *_m, int elapsed){
     for(int i=0; i<v->len; ++i){
       int key=v->buf[i].key;
       if(v->buf[i].state==KEY_DOWN){
+        ++(m->debug_down);
         int ins=0;
         switch(m->prio){
           case PRIO_LEFT:
@@ -55,6 +57,7 @@ static void tick(module *_m, int elapsed){
         ++(m->nheld);
         }
       else{
+        ++(m->debug_up);
         int del;
         for(del=0; del<m->nheld && key!=m->held[del].key; ++del);
         if(del<m->nheld){
@@ -138,6 +141,9 @@ static void debug(module *_m){
   for(int i=0; i<(m->nvoices-m->nplaying); ++i)
     printf("%d ", m->voices[i]);
   printf("\n");
+  printf("Down/up events since last debug: %d/%d\n",
+         m->debug_down, m->debug_up);
+  m->debug_down=m->debug_up=0;
   }
 
 class prio_class;
@@ -158,6 +164,7 @@ static module *create(char **argv){
   m->voices=malloc(sizeof(int)*m->nvoices);
   for(int i=0; i<m->nvoices; ++i)
     m->voices[i]=i;
+  m->debug_down=m->debug_up=0;
   config((module *)m, argv);
   return (module *)m;
   }

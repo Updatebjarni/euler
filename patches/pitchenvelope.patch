@@ -9,18 +9,18 @@ connect prio-1/monophone[0]/pitch add-1/signal
 connect prio-1/monophone[0]/gate adsr-1/gate
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
 
-set adsr-1/attack 500
-set adsr-1/decay 200
-set adsr-1/sustain 1V
-set adsr-1/release 200
-set adsr-1/max 2V
-set adsr-1/min 0
+set adsr-1/attack 240
+set adsr-1/decay 0
+set adsr-1/sustain 0
+set adsr-1/release 0
+set adsr-1/max -4V
+set adsr-1/min -2V
 
 connect adsr-1 add-1/control
 connect add-1 sid/chip[0]/voice[0]/pitch
 
 set sid/chip[0]/vol 15
-set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/voice[0]/triangle 1
 set sid/chip[0]/voice[0]/attack 0
 set sid/chip[0]/voice[0]/decay 4
 set sid/chip[0]/voice[0]/sustain 12

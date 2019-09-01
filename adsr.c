@@ -11,6 +11,8 @@ typedef enum{
   IDLE, ATTACK, DECAY, SUSTAIN, RELEASE
   }adsr_state;
 
+#define LOGLEN 16
+
 typedef struct adsr_module{
   MODULE_BASE
   int time;
@@ -22,6 +24,8 @@ typedef struct adsr_module{
   int32_t decay;
   int32_t sustain;
   int32_t release;
+  int log[LOGLEN];
+  int loghead;
   }adsr_module;
 
 static inline int32_t convert_out(adsr_module *m, double a) {
@@ -30,24 +34,35 @@ static inline int32_t convert_out(adsr_module *m, double a) {
   return m->min*(1.0-a)+m->max*a;
   }
 
-// Reads all the inputs and assigns default values
+// Reads all the inputs
 static void readinputs(adsr_module *m) {
-  m->attack=0;
-  m->attack=(m->input.attack.value);
-  m->decay=0;
-  m->decay=(m->input.decay.value);
-  m->sustain=1.0;
-  m->sustain=(m->input.sustain.value);
-  m->release=0;
-  m->release=(m->input.release.value);
-  m->min=0;
+  m->attack=m->input.attack.value;
+  m->decay=m->input.decay.value;
+  m->sustain=m->input.sustain.value;
+  m->release=m->input.release.value;
   m->min=m->input.min.value;
-  m->max=CVMAX;
   m->max=m->input.max.value;
+  }
+
+static void log_append(adsr_module *m, int state){
+  if(m->loghead>=LOGLEN)return;
+  if(state==-1){
+    if(m->loghead && m->log[m->loghead-1]!=-1)
+      m->log[m->loghead++]=-1;
+    }
+  else
+    m->log[m->loghead++]=state;
+  }
+
+static void next_state(adsr_module *m, int state){
+  m->state=state;
+  log_append(m, state);
   }
 
 static void tick(module *_m, int elapsed) {
   adsr_module *m=(adsr_module *)_m;
+
+  log_append(m, -1);
 
   readinputs(m);
     
@@ -56,8 +71,15 @@ static void tick(module *_m, int elapsed) {
     arate=1.0/m->attack;
 
   double suslevel=0;
-  if (m->max>0)
-    suslevel=((double)m->sustain)/((double)m->max);
+  if (m->sustain <= m->max && m->sustain >= m->min){
+    double delta=e_max(m->max, m->min) - e_min(m->max, m->min);
+    double susdist=e_min(m->max, m->min)+m->sustain;
+    
+    if (delta != 0)
+      suslevel = susdist / delta;
+    else // min and max are equal so suslevel equals either
+      suslevel = m->max;
+  }
 
   double drate=(1.0-suslevel)/m->decay;
   if (m->decay>0)
@@ -70,46 +92,52 @@ static void tick(module *_m, int elapsed) {
   switch(m->state){
     case IDLE:
       if (m->input.gate.value) {
-        m->state=ATTACK;
+        next_state(m, ATTACK);
         m->time=0; // reset timer
         }
       m->currentamp=0.0;
       break;
     case ATTACK:
       if (m->time>=m->attack || m->attack==0) {
-        m->state=DECAY;
+        next_state(m, DECAY);
         m->time=0;
         }
       if (!m->input.gate.value) {
-        m->state=RELEASE;
+        next_state(m, RELEASE);
         m->time=0;
         }
       m->currentamp=arate*m->time;
       break;
     case DECAY:
       if (!m->input.gate.value) {
-        m->state=RELEASE;
+        next_state(m, RELEASE);
         m->time=0;
+        break;
         }
       if (m->time>=m->decay || m->decay==0) {
-        m->state=SUSTAIN;
+        next_state(m, SUSTAIN);
         m->time=0;
         }
       m->currentamp=1.0-m->time*drate;
       break;
     case SUSTAIN:
       if (!m->input.gate.value) {
-        m->state=RELEASE;
+        next_state(m, RELEASE);
         m->time=0;
         }
       m->currentamp=suslevel;
       break;
     case RELEASE:
       if (m->currentamp<=0 || m->release==0) {
-        m->state=IDLE;
+        next_state(m, IDLE);
         m->currentamp=0;
         m->time=0;
         }
+      if (m->input.gate.value) {
+	next_state(m, ATTACK);
+	m->time=0;
+      }
+	
       m->currentamp-=rrate;
       break;
     }
@@ -121,6 +149,16 @@ static void tick(module *_m, int elapsed) {
     m->time+=elapsed;
   }
 
+static char *statename[]={"(time passes...)",
+                          "IDLE", "ATTACK", "DECAY", "SUSTAIN", "RELEASE"};
+
+static void debug(module *_m){
+  adsr_module *m=(adsr_module *)_m;
+  for(int i=0; i<m->loghead; ++i)
+    printf("%s\n", statename[m->log[i]+1]);
+  m->loghead=0;
+  }
+
 class adsr_class;
 
 static module *create(char **argv) {
@@ -128,9 +166,20 @@ static module *create(char **argv) {
 
   m=malloc(sizeof(adsr_module));
   base_module_init(m, &adsr_class);
+
+  m->input.attack.default_value = 0;
+  m->input.decay.default_value = 0;
+  m->input.sustain.default_value = 1.0;
+  m->input.release.default_value = 0;
+  m->input.min.default_value = 0;
+  m->input.max.default_value = CVMAX;
+
   m->time=0;
   m->currentamp=0;
   m->state=IDLE;
+
+  m->loghead=0;
+
   return (module *)m;
   }
 
@@ -139,5 +188,6 @@ class adsr_class={
   .descr="Control signal envelope",
   .tick=tick,
   .is_static=DYNAMIC_CLASS,
-  .create=create
+  .create=create,
+  .debug=debug
   };

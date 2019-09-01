@@ -158,7 +158,7 @@ int cmdlex(char ***to, char *str);
 int gui_main(int argc, char *argv[]);
 
 int e_min(int a, int b);
-
+int e_max(int a, int b);
 
 #ifdef COMPILING_MODULE
 #define base_module_init(M, C) \
