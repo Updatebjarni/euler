@@ -73,12 +73,10 @@ static void tick(module *_m, int elapsed) {
   double suslevel=0;
   if (m->sustain <= m->max && m->sustain >= m->min){
     double delta=e_max(m->max, m->min) - e_min(m->max, m->min);
-    double susdist=e_min(m->max, m->min)+m->sustain;
+    double susdist=m->sustain - e_min(m->max, m->min); 
     
     if (delta != 0)
-      suslevel = susdist / delta;
-    else // min and max are equal so suslevel equals either
-      suslevel = m->max;
+      suslevel = susdist/delta;
   }
 
   double drate=(1.0-suslevel)/m->decay;
