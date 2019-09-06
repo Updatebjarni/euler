@@ -23,6 +23,11 @@ euler-demo: all_modules.c main.o modules.o jacks.o commands.o cmdlex.o \
 	gcc ${CFLAGS} -o euler-demo main.o modules.o jacks.o commands.o \
 	    cmdlex.o util.o $(MODOBJS) $(GUI_OBJ) $(LDFLAGS)
 
+testing: all_modules.c modinit.o modules.o jacks.o commands.o cmdlex.o \
+	 util.o $(MODOBJS)
+	gcc ${CFLAGS} -o testing modinit.o modules.o jacks.o commands.o \
+	cmdlex.o util.o $(MODOBJS) $(LDFLAGS)
+
 .PHONY: $(GUI_OBJ)
 $(GUI_OBJ):
 	$(MAKE) -C $(GUI_DIR)
