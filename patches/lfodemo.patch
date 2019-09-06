@@ -5,9 +5,9 @@ create lfo
 create prio(voices=1)
 connect mog/lower prio-1
 
-set lfo-1/frequency 400
+set lfo-1/frequency 200
 set lfo-1/amplitude 1024
-set lfo-1/waveform 2
+set lfo-1/waveform 0
 
 connect prio-1/monophone[0]/pitch add-2/signal
 set add-2/control -134200000
