@@ -1,4 +1,4 @@
-create keyboard(lower split at F3 G3 A4 B4 C4)
+create keyboard(lower split into 6 at F3,G3,A4,B4,C4)
 create prio
 create prio
 create prio
