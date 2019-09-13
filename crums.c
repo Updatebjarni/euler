@@ -41,8 +41,8 @@ static void tick(module *_m, int elapsed){
     m->input.sd.valchanged=0;
     }
 
-  byte=((!!trig_d)<<0)|((!!trig_b)<<1)|((!!trig_cl)<<2)|
-       ((!!trig_l)<<3)|((!!trig_br)<<4)|((!!trig_sd)<<5);
+  byte=((!!trig_b)<<3)|((!!trig_d)<<1)|((!!trig_cl)<<0)|
+       ((!!trig_l)<<6)|((!!trig_br)<<2)|((!!trig_sd)<<7);
   MODULE_WRITE(byte);
 
   if(trig_d)--trig_d;
