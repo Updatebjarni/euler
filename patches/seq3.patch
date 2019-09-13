@@ -4,22 +4,26 @@ create cquencer(steps 8)
 create cquencer(steps 8)
 create sid
 
-connect mog/lower prio-1
+create add
+connect mog/pedal prio-1
 
 set cquencer-1/ticksperbeat 300
-config cquencer-1 (pitches C4 C5 C6 C4 C8 F4 G4 G#4)
-config cquencer-1 (length 40 0 90 0 90 20 40 260)
+config cquencer-1 (pitches 12H 24H 12H 24H 12H 24H 12H 24H)
+config cquencer-1 (length 150 150 150 150 150 150 150 150)
 
 set cquencer-2/ticksperbeat 300
 config cquencer-2 (pitches C3 C3 C4 C3 C3 C3 C4 C3)
-config cquencer-2 (length 0 40 100 40 0 40 100 40)
+config cquencer-2 (length 0 0 0 0 0 0 0 0)
 
 set cquencer-3/ticksperbeat 150
-config cquencer-3 (pitches C4 C4 C5 C4 C4 C5 C4 C4)
-config cquencer-3 (length 40 40 100 40 40 100 40 40)
+config cquencer-3 (pitches C4 C4 C4 C4 C4 C4 C4 C4)
+config cquencer-3 (length 200 40 40 40 200 40 40 40)
 
 connect cquencer-1/gate sid/chip[0]/voice[0]/gate
-connect cquencer-1/pitch sid/chip[0]/voice[0]/pitch
+connect add-1 sid/chip[0]/voice[0]/pitch
+
+connect prio-1/monophone[0]/pitch add-1/signal
+connect cquencer-1/pitch add-1/control
 
 connect cquencer-2/gate sid/chip[1]/voice[0]/gate
 connect cquencer-2/pitch sid/chip[1]/voice[0]/pitch
@@ -29,7 +33,7 @@ connect cquencer-3/pitch sid/chip[2]/voice[0]/pitch
 
 set sid/chip[0]/vol 8
 set sid/chip[0]/voice[0]/pulse 1
-set sid/chip[0]/voice[0]/pw 200
+set sid/chip[0]/voice[0]/pw 2000
 set sid/chip[0]/voice[0]/attack 3
 set sid/chip[0]/voice[0]/decay 0
 set sid/chip[0]/voice[0]/sustain 12

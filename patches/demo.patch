@@ -41,17 +41,17 @@ connect prio-1/monophone[2]/gate sid/chip[2]/voice[2]/gate
 
 set sid/chip[0]/vol 15
 set sid/chip[0]/voice[0]/saw 1
-set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/attack 8
 set sid/chip[0]/voice[0]/decay 4
 set sid/chip[0]/voice[0]/sustain 12
 set sid/chip[0]/voice[0]/release 9
 set sid/chip[0]/voice[1]/saw 1
-set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/attack 8
 set sid/chip[0]/voice[1]/decay 4
 set sid/chip[0]/voice[1]/sustain 12
 set sid/chip[0]/voice[1]/release 9
 set sid/chip[0]/voice[2]/saw 1
-set sid/chip[0]/voice[2]/attack 0
+set sid/chip[0]/voice[2]/attack 8
 set sid/chip[0]/voice[2]/decay 4
 set sid/chip[0]/voice[2]/sustain 12
 set sid/chip[0]/voice[2]/release 9
@@ -75,17 +75,17 @@ set sid/chip[1]/voice[2]/release 9
 
 set sid/chip[2]/vol 15
 set sid/chip[2]/voice[0]/triangle 1
-set sid/chip[2]/voice[0]/attack 0
+set sid/chip[2]/voice[0]/attack 8
 set sid/chip[2]/voice[0]/decay 4
 set sid/chip[2]/voice[0]/sustain 12
 set sid/chip[2]/voice[0]/release 9
 set sid/chip[2]/voice[1]/triangle 1
-set sid/chip[2]/voice[1]/attack 0
+set sid/chip[2]/voice[1]/attack 8
 set sid/chip[2]/voice[1]/decay 4
 set sid/chip[2]/voice[1]/sustain 12
 set sid/chip[2]/voice[1]/release 9
 set sid/chip[2]/voice[2]/triangle 1
-set sid/chip[2]/voice[2]/attack 0
+set sid/chip[2]/voice[2]/attack 8
 set sid/chip[2]/voice[2]/decay 4
 set sid/chip[2]/voice[2]/sustain 12
 set sid/chip[2]/voice[2]/release 9

@@ -16,7 +16,7 @@ set adsr-1/release 200
 set adsr-1/max 2040
 set adsr-1/min 100
 
-connect adsr-1 sid/chip[0]/cutoff
+connect adsr-1 sid/chip[0]/cutoff 
 
 set sid/chip[0]/vol 15
 set sid/chip[0]/voice[0]/saw 1

@@ -48,7 +48,4 @@ int main(int argc, char *argv[]){
   adsr->input_ptr[1]._value.logic=0;
   adsr->tick(adsr, 1);
   printf ("Output: %d \n", adsr->output_ptr->_value.virtual_cv);
-
-
-
 }

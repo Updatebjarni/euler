@@ -4,10 +4,11 @@ create cquencer(steps 8)
 create cquencer(steps 8)
 create sid
 
-connect mog/lower prio-1
+create add
+connect mog/pedal prio-1
 
 set cquencer-1/ticksperbeat 300
-config cquencer-1 (pitches C4 C5 C6 C4 C8 F4 G4 G#4)
+config cquencer-1 (pitches 0H 12H 24H 0H 36H 5H 7H 8H)
 config cquencer-1 (length 40 0 90 0 90 20 40 260)
 
 set cquencer-2/ticksperbeat 300
@@ -19,7 +20,10 @@ config cquencer-3 (pitches C4 C4 C5 C4 C4 C5 C4 C4)
 config cquencer-3 (length 40 40 100 40 40 100 40 40)
 
 connect cquencer-1/gate sid/chip[0]/voice[0]/gate
-connect cquencer-1/pitch sid/chip[0]/voice[0]/pitch
+connect add-1 sid/chip[0]/voice[0]/pitch
+
+connect prio-1/monophone[0]/pitch add-1/signal
+connect cquencer-1/pitch add-1/control
 
 connect cquencer-2/gate sid/chip[1]/voice[0]/gate
 connect cquencer-2/pitch sid/chip[1]/voice[0]/pitch

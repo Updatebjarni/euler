@@ -136,7 +136,7 @@ static void config(module *_m, char **argv){
   keyboard_module *m=(keyboard_module *)_m;
   int range, offset;
   char *end;
-
+  
   if(argv && argv[0] && !strcmp(argv[0], "transpose") && argv[1]){
     ++argv;
     while(argv[0]){
