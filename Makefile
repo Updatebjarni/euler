@@ -1,7 +1,8 @@
 CFLAGS := -g -O2 -std=c99 -Wall
 LDFLAGS := -lpthread -lreadline -ltermcap -lm -lmcheck -ldl -rdynamic
 
-MODULES := sid mog prio keyboard na add slew lfo gdelay sdelay adsr cquencer
+MODULES := sid mog prio keyboard na add slew lfo gdelay sdelay adsr cquencer \
+           crums
 # pulse
 MODOBJS := $(patsubst %,%.o,$(MODULES))
 
