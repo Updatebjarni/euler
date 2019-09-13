@@ -330,6 +330,6 @@ void cmd_connect(char **argv){
     }
   LOCK_NEST();
   if(connect_jacks(out, in))
-    printf("Connection failed.\n");
+    printf("Connection failed: \"%s\" to \"%s\".\n", argv[1], argv[2]);
   LOCK_UNNEST();
   }
