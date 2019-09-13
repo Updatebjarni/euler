@@ -59,6 +59,13 @@ static module *create(char **argv){
   if((source=find_jack(kbdname, DIR_OUT)) ||
      (source=find_jack(sourcename, DIR_OUT)))
     ++argv;
+
+  if(!source){
+    fprintf(stderr, "Source \"%s\" not found.\n", sourcename);
+    free(sourcename);
+    return 0;
+    }
+
   free(sourcename);
 
   if(*argv && !strcmp(*argv, "split")){
@@ -107,23 +114,31 @@ printf("range is unimplemented :(\n"); return 0;
     ranges[0].right=255;
     }
 
+fprintf(stderr, "hej\n");
+
   keyboard_module *m=malloc(sizeof(keyboard_module));
   base_module_init(m, &keyboard_class);
 
+fprintf(stderr, "hej 2\n");
   for(int key=0, range=0; key<256; ++key){
     if(key>ranges[range].right)++range;
     m->map[key]=range;
     }
   free(ranges);
 
+fprintf(stderr, "hej 3\n");
   resize_jack(&m->output._range, n);
   m->n=n;
 
+fprintf(stderr, "hej 4\n");
   m->transpose=malloc(sizeof(int)*n);
   for(int i=0; i<n; ++i)
     m->transpose[i]=0;
 
+fprintf(stderr, "hej 5: %p, %p\n", source, &(m->input));
   connect_jacks(source, &(m->input));
+
+fprintf(stderr, "hej 6\n");
 
   return (module *)m;
 

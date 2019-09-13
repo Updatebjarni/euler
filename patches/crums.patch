@@ -1,0 +1,16 @@
+create keyboard(lower split at F3 G3 A4 B4 C4)
+create prio
+create crums
+connect keyboard-1/range[0] prio-1
+connect keyboard-1/range[1] prio-2
+connect keyboard-1/range[2] prio-3
+connect keyboard-1/range[3] prio-4
+connect keyboard-1/range[4] prio-5
+connect keyboard-1/range[5] prio-6
+connect prio-1/monophone[0]/gate crums/d
+connect prio-2/monophone[0]/gate crums/b
+connect prio-3/monophone[0]/gate crums/cl
+connect prio-4/monophone[0]/gate crums/l
+connect prio-5/monophone[0]/gate crums/br
+connect prio-6/monophone[0]/gate crums/sd
+run crums
