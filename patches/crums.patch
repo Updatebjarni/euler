@@ -1,5 +1,10 @@
 create keyboard(lower split at F3 G3 A4 B4 C4)
 create prio
+create prio
+create prio
+create prio
+create prio
+create prio
 create crums
 connect keyboard-1/range[0] prio-1
 connect keyboard-1/range[1] prio-2
