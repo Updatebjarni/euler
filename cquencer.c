@@ -9,26 +9,12 @@
 
 typedef struct cquencer_module{
   MODULE_BASE
+  int steps;
   int time; // Time since start
+  int32_t *pitches;
+  int32_t **data;
+  int32_t *length;
   }cquencer_module;
-
-static void pstep(int input, cquencer_module *m){
-  int32_t p = m->input.step[input].pitch.value;
-  m->output.pitch.value=p;
-  set_output(&m->output.pitch);
-}
-
-static void v1step(int input, cquencer_module *m){
-  int32_t p = m->input.step[input].value1.value;
-  m->output.value1.value=p;
-  set_output(&m->output.value1);
-}
-  
-static void v2step(int input, cquencer_module *m){
-  int32_t p = m->input.step[input].value2.value;
-  m->output.value2.value=p;
-  set_output(&m->output.value2);
-}
 
 static void tick(module *_m, int elapsed){
   cquencer_module *m=(cquencer_module *)_m;
@@ -39,17 +25,47 @@ static void tick(module *_m, int elapsed){
   pwl%=ticksperbeat;
 
   int gate=0;
-  if (pwl<100)
+  if (pwl<m->length[step])
     gate=1;
-    
-  //m->output.pitch.value=m->pitch[step];
-  pstep(step, m);
-  v1step(step, m);
-  v2step(step, m);
+
+  m->output.pitch.value=m->pitches[step];
+  m->output.value1.value=m->data[0][step];
+  m->output.value2.value=m->data[1][step];
+  set_output(&m->output.pitch);
+  set_output(&m->output.value1);
+  set_output(&m->output.value2);
   m->output.gate.value=gate;
   set_output(&m->output.gate);
 
   m->time+=elapsed;
+}
+
+static void config(module *_m, char **argv){
+  cquencer_module *m=(cquencer_module *)_m;
+
+  if (strcmp(argv[0], "pitches")==0){
+    for (int i = 0; i<m->steps; i++){
+      long to;
+      strtocv(argv[i+1], &to);
+      m->pitches[i] = to;
+    }
+  }
+
+  if (strcmp(argv[0], "length")==0){
+    for (int i = 0; i<m->steps; i++){
+      long to;
+      strtocv(argv[i+1], &to);
+      m->length[i] = to;
+    }
+  }
+
+  if (strcmp(argv[0], "data")==0){
+    for (int i = 0; i<m->steps; i++){
+      long to;
+      strtocv(argv[i+1], &to);
+      m->data[0][i] = to;
+    }
+  }
 }
 
 class cquencer_class;
@@ -57,16 +73,38 @@ class cquencer_class;
 static module *create(char **argv){
   cquencer_module *m;
   m=malloc(sizeof(cquencer_module));
+
+  if (strcmp(argv[0], "steps")==0){
+    long to;
+    strtocv(argv[1], &to);
+    m->steps = to;
+  } else {
+    fprintf(stderr, "Ingen storlek angiven så storlek = 8\n");
+    m->steps = 8;
+  }
+
+  m->data = malloc(sizeof(int32_t*)*2);
+  m->data[0] = malloc(sizeof(int32_t)*m->steps);
+  m->data[1] = malloc(sizeof(int32_t)*m->steps);
+  m->pitches = malloc(sizeof(int32_t)*m->steps);
+  m->length = malloc(sizeof(int32_t)*m->steps);
+
   base_module_init(m, &cquencer_class);
   m->time=0;
   
-  return (module *)m;
+  for (int i=0; i<m->steps; i++){
+    m->pitches[i]=0;
+    m->data[0][i]=0;
+    m->data[1][i]=0;
   }
+
+  return (module *)m;
+}
 
 class cquencer_class={
   .name="cquencer",
-  .descr="A simple 8 step sequencer",
-  .tick=tick,
+  .descr="A simple N step sequencer",
+  .tick=tick, .destroy=0, .config=config,
   .is_static=DYNAMIC_CLASS,
   .create=create
   };
