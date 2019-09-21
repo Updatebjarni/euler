@@ -1,0 +1,28 @@
+create sid
+create sah
+create random
+create random
+create prio(voices=1)
+
+connect mog/lower prio-1
+
+set random-1/time 50
+set random-1/lower C3
+set random-1/upper C8
+set random-2/time 150
+set random-2/lower 500
+set random-2/upper 3500
+
+connect random-1 sid/chip[0]/voice[0]/pitch
+connect random-2 sid/chip[0]/voice[0]/pw
+
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 4
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 9
+
+run sid
