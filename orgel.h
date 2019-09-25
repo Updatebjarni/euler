@@ -12,11 +12,11 @@
    pitch/cutoff: 1V/octave, 440Hz @ 6V, 1V = 2^27 = 134217728
  */
 
-#define VOLT     134217728L
-#define OCTAVE   VOLT
-#define A440     6*OCTAVE
-#define HALFNOTE 11184811L
-#define CVMAX    VOLT*10
+#define VOLT     (134217728L)
+#define OCTAVE   (VOLT)
+#define A440     (6*OCTAVE)
+#define HALFNOTE (11184811L)
+#define CVMAX    (VOLT*10)
 
 enum{CONNECTED, DISCONNECTED};
 
