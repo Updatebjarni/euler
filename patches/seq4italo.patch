@@ -1,0 +1,51 @@
+create prio(voices=1)
+create cquencer(steps 16)
+create cquencer(steps 8)
+create cquencer(steps 8)
+create cquencer(steps 8)
+create crums
+create sid
+
+create add
+connect mog/pedal prio-1
+
+; BASS
+set cquencer-1/ticksperbeat 220
+config cquencer-1 (pitches 0H 12H 0H 12H 0H 12H 0H 12H 0H 12H 0H 12H 0H 12H 0H 12H )
+config cquencer-1 (length  100 100 100 100 100 100 100 100 100 100 100 100 100 100 100 100)
+
+; SNARE
+set cquencer-2/ticksperbeat 220
+config cquencer-2 (length 0 0 40 0  0 0 40 0 )
+
+; KICK
+set cquencer-3/ticksperbeat 220
+config cquencer-3 (length 20 0 0 0  20 0 0 0  20 0 0 0  20 0 20 0)
+
+; SHAKER
+set cquencer-4/ticksperbeat 110
+config cquencer-4 (length 20 0 20 20 20 0 20 20 20 0 20 20 20 0 20 20)
+
+connect cquencer-1/gate sid/chip[0]/voice[0]/gate
+connect add-1 sid/chip[0]/voice[0]/pitch
+
+connect prio-1/monophone[0]/pitch add-1/signal
+connect cquencer-1/pitch add-1/control
+
+connect cquencer-2/gate crums/sd
+connect cquencer-3/gate crums/b
+connect cquencer-4/gate crums/br
+
+set sid/chip[0]/vol 8
+set sid/chip[0]/cutoff 1324
+set sid/chip[0]/lp 1
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/pw 2000
+set sid/chip[0]/voice[0]/attack 3
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 0
+
+run sid
+run crums

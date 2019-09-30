@@ -1,6 +1,7 @@
 input {
     ticksperbeat: number
     gate: logic
+    time: virtual_cv
   }
 
 output {

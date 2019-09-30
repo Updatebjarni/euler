@@ -1,0 +1,20 @@
+create sid
+create sah
+create prio(voices=1)
+
+connect mog/lower prio-1
+
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect prio-1/monophone[0]/pitch sah-1/signal
+
+connect sah-1 sid/chip[0]/voice[0]/pitch
+set sah-1/time 300
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/voice[0]/triangle 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 4
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 9
+
+run sid
