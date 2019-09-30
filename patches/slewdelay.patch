@@ -5,10 +5,10 @@ create gdelay
 create prio(voices=1)
 connect mog/lower prio-1
 
-set gdelay-1/delay 700
-set sdelay-1/delay 700
+set gdelay-1/delay 500
+set sdelay-1/delay 500
 
-set slew-1/rate 1000000
+set slew-1/rate 9.0V
 connect prio-1/monophone[0]/pitch slew-1/signal
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
 connect prio-1/monophone[0]/gate gdelay-1/gate

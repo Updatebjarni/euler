@@ -3,6 +3,7 @@ create sah
 create random
 create random
 create prio(voices=1)
+create slew
 
 connect mog/lower prio-1
 
@@ -13,7 +14,9 @@ set random-2/time 150
 set random-2/lower 500
 set random-2/upper 3500
 
-connect random-1 sid/chip[0]/voice[0]/pitch
+connect random-1 slew-1/signal
+set slew-1/rate 1000000
+connect slew-1 sid/chip[0]/voice[0]/pitch
 connect random-2 sid/chip[0]/voice[0]/pw
 
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
