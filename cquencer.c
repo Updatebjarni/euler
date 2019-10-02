@@ -26,7 +26,7 @@ static void tick(module *_m, int elapsed){
   int32_t ticksperbeat=m->input.ticksperbeat.value;
   
   int pwl;
-  if (m->state=AUTOMATIC)
+  if (m->state==AUTOMATIC)
     pwl=m->time%(m->steps*ticksperbeat);
   else {
     int t=m->input.time.value;
@@ -88,6 +88,15 @@ static void config(module *_m, char **argv){
 
 class cquencer_class;
 
+static void destroy(module *m){
+  cquencer_module *_m = (cquencer_module*)m;
+  free(_m->data[0]);
+  free(_m->data[1]);
+  free(_m->pitches);
+  free(_m->length);
+  free(_m->data);
+}
+
 static module *create(char **argv){
   cquencer_module *m;
   m=malloc(sizeof(cquencer_module));
@@ -125,7 +134,7 @@ static module *create(char **argv){
 class cquencer_class={
   .name="cquencer",
   .descr="A simple N step sequencer",
-  .tick=tick, .destroy=0, .config=config,
+  .tick=tick, .destroy=destroy, .config=config,
   .is_static=DYNAMIC_CLASS,
   .create=create
   };
