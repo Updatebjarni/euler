@@ -1,0 +1,75 @@
+create prio
+config prio-1(voices=9)
+connect mog/lower prio-1
+create sid
+connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate 
+connect prio-1/monophone[1]/pitch sid/chip[0]/voice[1]/pitch
+connect prio-1/monophone[1]/gate sid/chip[0]/voice[1]/gate 
+connect prio-1/monophone[2]/pitch sid/chip[0]/voice[2]/pitch
+connect prio-1/monophone[2]/gate sid/chip[0]/voice[2]/gate 
+connect prio-1/monophone[3]/pitch sid/chip[1]/voice[0]/pitch
+connect prio-1/monophone[3]/gate sid/chip[1]/voice[0]/gate 
+connect prio-1/monophone[4]/pitch sid/chip[1]/voice[1]/pitch
+connect prio-1/monophone[4]/gate sid/chip[1]/voice[1]/gate 
+connect prio-1/monophone[5]/pitch sid/chip[1]/voice[2]/pitch
+connect prio-1/monophone[5]/gate sid/chip[1]/voice[2]/gate 
+connect prio-1/monophone[6]/pitch sid/chip[2]/voice[0]/pitch
+connect prio-1/monophone[6]/gate sid/chip[2]/voice[0]/gate 
+connect prio-1/monophone[7]/pitch sid/chip[2]/voice[1]/pitch
+connect prio-1/monophone[7]/gate sid/chip[2]/voice[1]/gate 
+connect prio-1/monophone[8]/pitch sid/chip[2]/voice[2]/pitch
+connect prio-1/monophone[8]/gate sid/chip[2]/voice[2]/gate 
+
+set sid/chip[0]/vol 15
+set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 15
+set sid/chip[0]/voice[0]/release 0
+set sid/chip[0]/voice[1]/saw 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 15
+set sid/chip[0]/voice[1]/release 0
+set sid/chip[0]/voice[2]/saw 1
+set sid/chip[0]/voice[2]/attack 0
+set sid/chip[0]/voice[2]/decay 0
+set sid/chip[0]/voice[2]/sustain 15
+set sid/chip[0]/voice[2]/release 0
+
+set sid/chip[1]/vol 15
+set sid/chip[1]/voice[0]/saw 1
+set sid/chip[1]/voice[0]/attack 0
+set sid/chip[1]/voice[0]/decay 0
+set sid/chip[1]/voice[0]/sustain 15
+set sid/chip[1]/voice[0]/release 0
+set sid/chip[1]/voice[1]/saw 1
+set sid/chip[1]/voice[1]/attack 0
+set sid/chip[1]/voice[1]/decay 0
+set sid/chip[1]/voice[1]/sustain 15
+set sid/chip[1]/voice[1]/release 0
+set sid/chip[1]/voice[2]/saw 1
+set sid/chip[1]/voice[2]/attack 0
+set sid/chip[1]/voice[2]/decay 0
+set sid/chip[1]/voice[2]/sustain 15
+set sid/chip[1]/voice[2]/release 0
+
+set sid/chip[2]/vol 15
+set sid/chip[2]/voice[0]/saw 1
+set sid/chip[2]/voice[0]/attack 0
+set sid/chip[2]/voice[0]/decay 0
+set sid/chip[2]/voice[0]/sustain 15
+set sid/chip[2]/voice[0]/release 0
+set sid/chip[2]/voice[1]/saw 1
+set sid/chip[2]/voice[1]/attack 0
+set sid/chip[2]/voice[1]/decay 0
+set sid/chip[2]/voice[1]/sustain 15
+set sid/chip[2]/voice[1]/release 0
+set sid/chip[2]/voice[2]/saw 1
+set sid/chip[2]/voice[2]/attack 0
+set sid/chip[2]/voice[2]/decay 0
+set sid/chip[2]/voice[2]/sustain 15
+set sid/chip[2]/voice[2]/release 0
+
+run sid

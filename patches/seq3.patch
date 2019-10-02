@@ -2,18 +2,18 @@ create prio(voices=1)
 create cquencer(steps 8)
 create cquencer(steps 8)
 create cquencer(steps 8)
+create crums
 create sid
 
 create add
 connect mog/pedal prio-1
 
 set cquencer-1/ticksperbeat 300
-config cquencer-1 (pitches 12H 24H 12H 24H 12H 24H 12H 24H)
-config cquencer-1 (length 150 150 150 150 150 150 150 150)
+config cquencer-1 (pitches 12H 0 24H 12H 0 24H 12H 0)
+config cquencer-1 (length 150 0 150 150 0 150 150 0)
 
 set cquencer-2/ticksperbeat 300
-config cquencer-2 (pitches C3 C3 C4 C3 C3 C3 C4 C3)
-config cquencer-2 (length 0 0 0 0 0 0 0 0)
+config cquencer-2 (length 20 0 0 20 0 0 20 0)
 
 set cquencer-3/ticksperbeat 150
 config cquencer-3 (pitches C4 C4 C4 C4 C4 C4 C4 C4)
@@ -25,11 +25,8 @@ connect add-1 sid/chip[0]/voice[0]/pitch
 connect prio-1/monophone[0]/pitch add-1/signal
 connect cquencer-1/pitch add-1/control
 
-connect cquencer-2/gate sid/chip[1]/voice[0]/gate
-connect cquencer-2/pitch sid/chip[1]/voice[0]/pitch
-
-connect cquencer-3/gate sid/chip[2]/voice[0]/gate
-connect cquencer-3/pitch sid/chip[2]/voice[0]/pitch
+connect cquencer-2/gate crums/b
+connect cquencer-3/gate crums/br
 
 set sid/chip[0]/vol 8
 set sid/chip[0]/voice[0]/pulse 1
@@ -39,18 +36,5 @@ set sid/chip[0]/voice[0]/decay 0
 set sid/chip[0]/voice[0]/sustain 12
 set sid/chip[0]/voice[0]/release 0
 
-set sid/chip[1]/vol 15
-set sid/chip[1]/voice[0]/triangle 1
-set sid/chip[1]/voice[0]/attack 0
-set sid/chip[1]/voice[0]/decay 0
-set sid/chip[1]/voice[0]/sustain 12
-set sid/chip[1]/voice[0]/release 0
-
-set sid/chip[2]/vol 8
-set sid/chip[2]/voice[0]/noise 1
-set sid/chip[2]/voice[0]/attack 0
-set sid/chip[2]/voice[0]/decay 0
-set sid/chip[2]/voice[0]/sustain 12
-set sid/chip[2]/voice[0]/release 1
-
 run sid
+run crums
