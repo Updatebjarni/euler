@@ -5,29 +5,31 @@ create adsr
 create prio(voices=1)
 connect mog/lower prio-1
 
-set lfo-1/frequency 6000
+set lfo-1/frequency 9000
 set lfo-1/waveform 0
 connect adsr-1 lfo-1/amplitude
 
+connect lfo-1 add-1/control
+set lfo-1/time 400
+
 set adsr-1/attack 500
 set adsr-1/decay 0
-set adsr-1/sustain 4000000
+set adsr-1/sustain 900000
 set adsr-1/release 0
 set adsr-1/min 0
-set adsr-1/max 5000000
+set adsr-1/max 1000000
 
 connect prio-1/monophone[0]/pitch add-1/signal
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
 connect prio-1/monophone[0]/gate adsr-1/gate
 
 connect add-1 sid/chip[0]/voice[0]/pitch
-connect lfo-1 add-1/control
 
 set sid/chip[0]/vol 12
 set sid/chip[0]/voice[0]/triangle 1
 set sid/chip[0]/voice[0]/attack 0
-set sid/chip[0]/voice[0]/decay 4
-set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/decay 3
+set sid/chip[0]/voice[0]/sustain 7
 set sid/chip[0]/voice[0]/release 9
 
 run sid

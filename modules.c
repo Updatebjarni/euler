@@ -212,7 +212,7 @@ const char help_run[]="Set a module as running. Usage: run <module>\n";
 
 void cmd_run(char **argv){
   module *m=find_module(argv[1]);
-  if(!m){printf("not found\n"); return;}
+  if(!m){printf("%s not found\n", argv[1]); return;}
   run_module(m);
   }
 

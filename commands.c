@@ -199,7 +199,7 @@ void cmd_set(char **argv){
 void cmd_j(char **argv){
   jack *j=find_jack(argv[1], (argv[0][0]=='j')?DIR_IN:DIR_OUT);
   if(!j){
-    printf("not found\n");
+    printf("jack not found\n");
     return;
     }
   switch(j->type){

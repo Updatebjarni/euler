@@ -1,0 +1,36 @@
+create prio(voices=1)
+create poly
+create sid
+create conv
+create conv
+create add
+create conv
+connect mog/lower prio-1
+
+; SNARE
+; KICK
+; SHAKER
+
+set poly-1/ticksperloop 2000
+config poly-1 (divisor 3 2 11 3 1 1 1 1)
+connect poly-1/gates[0]/gate conv-1/gate
+connect conv-1/virtual_cv add-1/signal
+connect poly-1/gates[1]/gate conv-2/gate
+connect conv-2/virtual_cv add-1/control
+connect add-1 conv-3/virtual_cv
+connect conv-3/gate sid/chip[0]/voice[0]/gate
+
+connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
+
+set sid/chip[0]/vol 8
+set sid/chip[0]/cutoff 1324
+set sid/chip[0]/lp 1
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/pw 2000
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 3
+set sid/chip[0]/voice[0]/sustain 5
+set sid/chip[0]/voice[0]/release 0
+
+run sid
