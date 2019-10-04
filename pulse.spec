@@ -1,7 +1,7 @@
 input {
-    gate: bool
-    length: int32
-    height: int32
+    gate: logic
+    length: virtual_cv
+    height: virtual_cv
   }
 
-output int32
+output virtual_cv
