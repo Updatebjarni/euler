@@ -23,7 +23,7 @@ connect conv-3/gate sid/chip[0]/voice[0]/gate
 connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
 
 set sid/chip[0]/vol 8
-set sid/chip[0]/cutoff 1324
+set sid/chip[0]/cutoff 700
 set sid/chip[0]/lp 1
 set sid/chip[0]/voice[0]/filter 1
 set sid/chip[0]/voice[0]/pulse 1

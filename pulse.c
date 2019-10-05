@@ -19,7 +19,6 @@ static void tick(module *_m, int elapsed) {
   if(m->input.gate.value) {
     if(m->time==0 && (!m->on)) {
       m->on=1;
-      //m->time=INPUT(m)->length.connection->value;
       m->time=m->input.length.value;
     }
   } else {
@@ -28,18 +27,10 @@ static void tick(module *_m, int elapsed) {
   }
   
   if(m->time>0) {
-    if(m->input.height.connection) {
-      //OUTPUT(m).int32_value=INPUT(m)->height.connection->value;
-      m->output.value=m->input.height.value;
-    }
-    else { 
-      m->output.value=CVMAX;
-      //OUTPUT(m).int32_value=CVMAX;
-    }
+    m->output.value=m->input.height.value;
     m->time--;
   } else {
     m->output.value=0;
-    //OUTPUT(m).int32_value=0;
   }
 
   set_output(&m->output);

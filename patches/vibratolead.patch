@@ -10,7 +10,6 @@ set lfo-1/waveform 0
 connect adsr-1 lfo-1/amplitude
 
 connect lfo-1 add-1/control
-set lfo-1/time 400
 
 set adsr-1/attack 500
 set adsr-1/decay 0
@@ -28,8 +27,8 @@ connect add-1 sid/chip[0]/voice[0]/pitch
 set sid/chip[0]/vol 12
 set sid/chip[0]/voice[0]/triangle 1
 set sid/chip[0]/voice[0]/attack 0
-set sid/chip[0]/voice[0]/decay 3
-set sid/chip[0]/voice[0]/sustain 7
-set sid/chip[0]/voice[0]/release 9
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 6
 
 run sid

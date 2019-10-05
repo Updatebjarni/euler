@@ -153,7 +153,7 @@ void cmd_set(char **argv){
     }
   jack *j=find_jack(argv[1], DIR_IN);
   if(!j){
-    printf("Input jack not found.\n");
+    printf("Input jack %s not found.\n", argv[1]);
     return;
     }
   if(j->type==TYPE_LOGIC){

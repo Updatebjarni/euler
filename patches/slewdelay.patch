@@ -31,7 +31,7 @@ set sid/chip[0]/voice[1]/pulse 1
 set sid/chip[0]/voice[1]/pw 2048
 set sid/chip[0]/voice[1]/attack 0
 set sid/chip[0]/voice[1]/decay 4
-set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/sustain 6
 set sid/chip[0]/voice[1]/release 9
 
 run sid
