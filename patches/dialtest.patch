@@ -1,0 +1,15 @@
+create sid
+set sid/chip[0]/vol 15
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 15
+set sid/chip[0]/voice[0]/release 0
+set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/lp 1
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/voice[0]/gate 1
+
+connect mog/dial[0] sid/chip[0]/voice[0]/pitch
+connect mog/dial[1] sid/chip[0]/cutoff
+
+run sid

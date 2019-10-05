@@ -12,6 +12,8 @@ som sätts till 0.
 
 #include<stdlib.h>
 #include<unistd.h>
+#include<fcntl.h>
+#include<poll.h>
 #include"orgel.h"
 #include"orgel-io.h"
 
@@ -30,6 +32,15 @@ enum{LOWER=0, UPPER, PEDAL};
 struct debounce{
   int key, timer;
   };
+
+static unsigned between;
+
+static int dialbox_fd=-1;
+static struct pollfd dialbox_pfd={.events=POLLIN};
+static int dialbox_buflen;
+static unsigned char dialbox_buf[3];
+static unsigned short dialbox_dial[8];
+static long dialbox_val[8];
 
 static unsigned short keybits[2][10];
 static unsigned short bouncemask[10]={0};
@@ -129,10 +140,43 @@ static void tick(module *_m, int elapsed){
       }
     }
 
+  if(dialbox_fd>-1){
+    int res=poll(&dialbox_pfd, 1, 0);
+    if(res<0 || dialbox_pfd.revents&POLLERR){
+      close(dialbox_fd);
+      dialbox_fd=-1;
+      }
+    if(dialbox_pfd.revents&POLLIN){
+      res=read(dialbox_fd, dialbox_buf+dialbox_buflen, 3-dialbox_buflen);
+      if(res<0){
+        close(dialbox_fd);
+        dialbox_fd=-1;
+        }
+      else{
+        dialbox_buflen+=res;
+        if(dialbox_buflen==3){
+          dialbox_buflen=0;
+          short dialno=dialbox_buf[0]&7;
+          unsigned short pos=(dialbox_buf[1]<<8)|dialbox_buf[2];
+          short delta=pos-dialbox_dial[dialno];
+          dialbox_dial[dialno]=pos;
+          m->output.dial[dialno].value+=
+            delta*(m->input.dial_res[dialno].value/200);
+          set_output(&m->output.dial[dialno]);
+//          printf("between: %d\n", between);
+//          between=0;
+          }
+        }
+      }
+    }
+//if(between<0xFFFFFFFF)++between;
+
   m->output.lower.value.len=buflen[LOWER];
   m->output.upper.value.len=buflen[UPPER];
   m->output.pedal.value.len=buflen[PEDAL];
-// *** PROPAGATE OUTPUT
+  set_output(&m->output.pedal);
+  set_output(&m->output.upper);
+  set_output(&m->output.lower);
 
   current=!current;
   }
@@ -141,6 +185,16 @@ int mog_grab_key(){
   single_grab.ready=0;
   while(!single_grab.ready);
   return single_grab.key;
+  }
+
+void plugstatus(module *_m, jack *j){
+  mog_module *m=(mog_module *)_m;
+
+  if(j->parent_jack==(jack *)m->output.dial){
+    int n=j-(jack *)(m->output.dial);
+    if(j->nconnections)dialbox_val[n]=j->connections[0]->value.virtual_cv;
+    fprintf(stderr, "dialbox output %d (un)plugged\n", n);
+    }
   }
 
 class mog_class;
@@ -152,12 +206,33 @@ static module *create(char **argv){
   eventbuf[UPPER]=m->output.upper.value.buf;
   eventbuf[PEDAL]=m->output.pedal.value.buf;
   read_keys(keybits[!current]);
+
+  int dfd=open("/dev/ttyS0", O_RDWR|O_NOCTTY);
+  if(dfd<0)perror("(mog dialbox) /dev/ttyS0");
+  else{
+    static unsigned char cmd_init[]={0x20},
+                         cmd_enable[]={0x50, 0x00, 0xFF},
+                         response;
+    write(dfd, cmd_init, 1);
+    dialbox_pfd.fd=dfd;
+    int res=poll(&dialbox_pfd, 1, 500);
+    if(!res)fprintf(stderr, "(mog dialbox) poll timeout\n");
+    else if(res<0 || dialbox_pfd.revents&POLLERR)perror("(mog dialbox) poll");
+    else if(read(dfd, &response, 1)<0)perror("(mog dialbox) read");
+    else if(response!=0x20)fprintf(stderr, "(mog dialbox) bad response\n");
+    else if(write(dfd, cmd_enable, 3)<0)perror("(mog dialbox) write");
+    else dialbox_fd=dfd;
+    }
+  for(int i=0; i<8; ++i)
+    m->input.dial_res[i].value=1*VOLT;
+
   return (module *)m;
   }
 
 class mog_class={
   .name="mog", .descr="Människa-Orgel-Gränssnittet",
   .tick=tick, .destroy=0, .config=0,
+  .plugstatus=plugstatus,
   .is_static=STATIC_CLASS,
   .create=create,
   .create_counter=0

@@ -282,9 +282,9 @@ int connect_jacks(jack *output, jack *input){
   output->connections[output->nconnections]=input;
   ++(output->nconnections);
   input->connection=output;
+  plugstatus(output);
   input->value=output->value;
   plugstatus(input);
-  plugstatus(output);
   LOCK_UNNEST();
   return 0;
   }
