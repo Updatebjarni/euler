@@ -34,7 +34,7 @@ $(GUI_OBJ):
 	$(MAKE) -C $(GUI_DIR)
 
 .PHONY: all_modules.c
-all_modules.c:
+all_modules.c: Makefile
 	echo extern class $(MODULES:%=%_class,) | sed 's/,$$/;/' \
 	     > all_modules.c
 	echo 'class *all_classes[]={' $(MODULES:%='&%_class,') ' 0};' \
