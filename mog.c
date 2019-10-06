@@ -160,8 +160,9 @@ static void tick(module *_m, int elapsed){
           unsigned short pos=(dialbox_buf[1]<<8)|dialbox_buf[2];
           short delta=pos-dialbox_dial[dialno];
           dialbox_dial[dialno]=pos;
-          m->output.dial[dialno].value+=
-            delta*(m->input.dial_res[dialno].value/200);
+          dialbox_val[dialno]+=delta;
+          m->output.dial[dialno].value=
+            dialbox_val[dialno]*m->input.dial_res[dialno].value;
           set_output(&m->output.dial[dialno]);
 //          printf("between: %d\n", between);
 //          between=0;
@@ -192,7 +193,9 @@ void plugstatus(module *_m, jack *j){
 
   if(j->parent_jack==(jack *)m->output.dial){
     int n=j-(jack *)(m->output.dial);
-    if(j->nconnections)dialbox_val[n]=j->connections[0]->value.virtual_cv;
+    if(j->nconnections)
+      dialbox_val[n]=
+        200LL*j->connections[0]->value.virtual_cv/m->input.dial_res[n].value;
     fprintf(stderr, "dialbox output %d (un)plugged\n", n);
     }
   }
