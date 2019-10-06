@@ -162,9 +162,8 @@ static void tick(module *_m, int elapsed){
           dialbox_dial[dialno]=pos;
           dialbox_val[dialno]+=delta;
           m->output.dial[dialno].value=
-            dialbox_val[dialno]*m->input.dial_res[dialno].value;
+            (long long)dialbox_val[dialno]*m->input.dial_res[dialno].value/200;
           set_output(&m->output.dial[dialno]);
-printf("dialbox: val %ld, out %ld\n", dialbox_val[dialno], (long)m->output.dial[dialno].value);
 //          printf("between: %d\n", between);
 //          between=0;
           }
