@@ -1,0 +1,10 @@
+input {
+    ticksperbeat: number
+    keys: key_events(44)
+  }
+
+output {
+    pitch: virtual_cv
+    acc: logic
+    gate: logic
+  }

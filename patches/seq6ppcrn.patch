@@ -1,0 +1,76 @@
+create prio (voices=1) as MAX
+create prio (voices=1) as MIN
+create prio (voices=1) as KEY
+create prio (voices=1) as MEL
+create keyboard(lower split into 2 at C5)
+
+create cquencer(steps 16) as MAJOR
+create cquencer(steps 16) as MINOR
+create sid
+create ginv
+
+create add
+create add
+create add () as TRANSP
+connect mog/pedal MAX
+connect mog/pedal MIN
+
+connect keyboard-1/range[0] KEY
+connect keyboard-1/range[1] MEL
+
+;connect mog/lower KEY
+
+; BASS
+set MAJOR/ticksperbeat 120
+config MAJOR (pitches 0H 0 12H 7H -5H 0 12H 7H 0H 0 12H 7H -5H 4H 7H 12H)
+config MAJOR (length  90 0 90 90   90 0 90 90  90 0 90 90   90 90 90 90 )
+set MINOR/ticksperbeat 120
+config MINOR (pitches 0H 0 12H 7H -5H 0 12H 7H 0H 0 12H 7H -5H 3H 7H 12H)
+config MINOR (length  90 0 90 90   90 0 90 90  90 0 90 90   90 90 90 90 )
+
+connect MINOR/gate sid/chip[0]/voice[0]/gate
+connect MINOR/pitch add-1/signal
+connect MAJOR/gate sid/chip[0]/voice[1]/gate
+connect MAJOR/pitch add-2/signal
+
+connect KEY/monophone[0]/pitch TRANSP/signal
+set TRANSP/control -1V
+connect TRANSP add-1/control
+connect TRANSP add-2/control
+
+connect add-1 sid/chip[0]/voice[0]/pitch
+connect add-2 sid/chip[0]/voice[1]/pitch
+connect MIN/monophone[0]/gate ginv-1/gate
+connect ginv-1 MINOR/gate
+connect MAX/monophone[0]/gate MAJOR/gate
+
+connect MEL/monophone[0]/pitch sid/chip[0]/voice[2]/pitch
+connect MEL/monophone[0]/gate sid/chip[0]/voice[2]/gate
+
+
+set sid/chip[0]/cutoff 1024
+set sid/chip[0]/vol 10
+set sid/chip[0]/lp 1
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/voice[0]/attack 3
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 0
+
+set sid/chip[0]/voice[1]/filter 1
+set sid/chip[0]/voice[1]/saw 1
+set sid/chip[0]/voice[1]/attack 3
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 0
+
+set sid/chip[0]/voice[2]/filter 0
+set sid/chip[0]/voice[2]/triangle 1
+set sid/chip[0]/voice[2]/attack 0
+set sid/chip[0]/voice[2]/decay 5
+set sid/chip[0]/voice[2]/sustain 0
+set sid/chip[0]/voice[2]/release 0
+
+
+run sid

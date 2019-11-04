@@ -1,0 +1,37 @@
+create prio(voices=1)
+create cquencer(steps 4)
+create sid
+create add
+
+connect mog/lower prio-1
+
+set cquencer-1/ticksperbeat 300
+config cquencer-1 (pitches 0H 5H 7H 12H)
+config cquencer-1 (length 40 0 90 0 90 20 40 260)
+
+connect cquencer-1/gate sid/chip[0]/voice[0]/gate
+connect cquencer-1/pitch sid/chip[0]/voice[0]/pitch
+
+set sid/chip[0]/vol 8
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/pw 200
+set sid/chip[0]/voice[0]/attack 3
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 0
+
+set sid/chip[1]/vol 15
+set sid/chip[1]/voice[0]/triangle 1
+set sid/chip[1]/voice[0]/attack 0
+set sid/chip[1]/voice[0]/decay 0
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 0
+
+set sid/chip[2]/vol 8
+set sid/chip[2]/voice[0]/noise 1
+set sid/chip[2]/voice[0]/attack 0
+set sid/chip[2]/voice[0]/decay 0
+set sid/chip[2]/voice[0]/sustain 12
+set sid/chip[2]/voice[0]/release 1
+
+run sid

@@ -1,0 +1,60 @@
+create sid
+create add
+create add
+create add
+create slew
+create lfo
+create prio(voices=1)
+connect mog/lower prio-1
+
+set lfo-1/frequency 5000
+set lfo-1/amplitude 1024
+set lfo-1/waveform 0
+
+connect prio-1/monophone[0]/pitch add-3/signal
+connect add-3 slew-1/signal
+set add-3/control -12H
+set slew-1/rate 9.0V
+connect slew-1 add-2/signal
+set add-2/control -12H
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[1]/gate
+
+set add-1/signal 2048
+
+connect add-2 sid/chip[0]/voice[0]/pitch
+connect slew-1 sid/chip[0]/voice[1]/pitch
+
+connect add-1 sid/chip[0]/voice[0]/pw
+connect add-1 sid/chip[0]/voice[1]/pw
+;set sid/chip[0]/voice[0]/pw 1024
+;set sid/chip[0]/voice[1]/pw 1024
+connect lfo-1 add-1/control
+
+set sid/chip[0]/cutoff 1020
+connect mog/dial[0] sid/chip[0]/cutoff
+set mog/dial_res[0] 1024
+
+set mog/dial_res[1] 15
+connect mog/dial[1] sid/chip[0]/res
+
+set mog/dial_res[2] 200
+connect mog/dial[2] lfo-1/frequency
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 0
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/lp 1
+
+set sid/chip[0]/voice[1]/pulse 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 0
+set sid/chip[0]/voice[1]/filter 1
+
+run sid

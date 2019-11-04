@@ -1,0 +1,39 @@
+create sid
+create add
+create add
+create slew
+create prio(voices=1)
+connect mog/lower prio-1
+
+connect prio-1/monophone[0]/pitch slew-1/signal
+set slew-1/rate 9.0V
+connect slew-1 add-2/signal
+set add-2/control 0.1V
+
+set mog/dial_res[1] 0.1V
+connect mog/dial[1] add-2/control
+
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[1]/gate
+
+connect add-2 sid/chip[0]/voice[0]/pitch
+connect slew-1 sid/chip[0]/voice[1]/pitch
+
+set sid/chip[0]/vol 12
+
+set sid/chip[0]/voice[1]/sync 1
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/pw 1024
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 0
+set sid/chip[0]/voice[0]/release 0
+
+
+set sid/chip[0]/voice[1]/triangle 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 0
+
+run sid
