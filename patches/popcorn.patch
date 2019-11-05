@@ -1,0 +1,19 @@
+create prio(voices=1)
+create sid
+
+connect mog/lower prio-1
+connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/cutoff 700
+set sid/chip[0]/lp 1
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/pw 2000
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 3
+set sid/chip[0]/voice[0]/sustain 5
+set sid/chip[0]/voice[0]/release 0
+
+run sid

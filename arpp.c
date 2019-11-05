@@ -9,8 +9,10 @@
 
 typedef struct arpp_module{
   MODULE_BASE
-  int steps;
+  int steps; // Size of sequence
   int time; // Time since start
+  int keys; // Number of keys held
+  int recent;
   int32_t *num;
   int32_t *on;
   int32_t *tie;
@@ -40,8 +42,10 @@ static void tick(module *_m, int elapsed){
     int key=v->buf[i].key;
     if(v->buf[i].state==KEY_DOWN){
       m->held[key]=1;
+      m->keys++;
     } else {
       m->held[key]=0;
+      m->keys--;
     }
   }
 
@@ -49,22 +53,32 @@ static void tick(module *_m, int elapsed){
   int step=pwl/ticksperbeat;
   pwl%=ticksperbeat;
 
-  int32_t k=keyfind(m->num[step], m->held);
-  if (k>=0)
-    m->output.pitch.value=(k+m->ntransp[step]+12*m->otransp[step])*HALFNOTE;
+  int32_t k=0;
+  if (m->num[step]>=0){
+    m->recent=-1; // Reset old randomized key
+    k=keyfind(m->num[step], m->held);
+    if (k>=0)
+      m->output.pitch.value=(k+m->ntransp[step]+12*m->otransp[step])*HALFNOTE;
+  } else if (m->keys>0){
+    int rk = rand()%m->keys;
+    k=keyfind(rk, m->held);
+    if (m->recent<0)
+      m->recent=k;
+    m->output.pitch.value=(m->recent+m->ntransp[step]+12*m->otransp[step])*HALFNOTE;
+  }
 
   int gate=0;
   if(k>=0){
-    if (pwl<80 && m->on[step]){
+    if (pwl<40 && m->keys>0){
       m->output.gate.value=1;
     } else {
-      m->output.gate.value=0;
+      if (!m->tie[step])
+	m->output.gate.value=0;
     }
   }
 
   set_output(&m->output.gate);
   set_output(&m->output.pitch);
-
   m->time+=elapsed;
 }
 
@@ -84,6 +98,14 @@ static void config(module *_m, char **argv){
       long to;
       strtocv(argv[i+1], &to);
       m->num[i] = to;
+    }
+  }
+
+  if (strcmp(argv[0], "tie")==0){
+    for (int i = 0; i<m->steps; i++){
+      long to;
+      strtocv(argv[i+1], &to);
+      m->tie[i] = to;
     }
   }
 
@@ -134,6 +156,8 @@ static module *create(char **argv){
   
   base_module_init(m, &arpp_class);
   m->time=0;
+  m->keys=0;
+  m->recent=-1;
   for (int i=0; i<256; i++)
     m->held[i]=0;
 
@@ -142,7 +166,6 @@ static module *create(char **argv){
   m->num=malloc(sizeof(int32_t)*m->steps);
   m->ntransp=malloc(sizeof(int32_t)*m->steps);
   m->otransp=malloc(sizeof(int32_t)*m->steps);
-
 
   for (int i=0; i<m->steps; ++i){
     m->on[i]=0;
