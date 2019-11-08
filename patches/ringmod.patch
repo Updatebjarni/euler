@@ -1,0 +1,30 @@
+create sid
+create add
+create prio(voices=1)
+connect mog/lower prio-1
+
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect prio-1/monophone[0]/pitch add-1/signal
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[1]/gate
+connect prio-1/monophone[0]/pitch sid/chip[0]/voice[1]/pitch
+connect add-1 sid/chip[0]/voice[0]/pitch
+set add-1/control 1V
+connect mog/dial[0] add-1/control
+set mog/dial_res[0] 1V
+
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/voice[0]/triangle 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 0 ;SILENCED
+set sid/chip[0]/voice[0]/release 0
+
+set sid/chip[0]/voice[1]/ringmod 1
+set sid/chip[0]/voice[1]/triangle 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 0
+
+run sid

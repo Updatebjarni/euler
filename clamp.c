@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include<math.h>
 #include<stdint.h>
 #include"orgel.h"
@@ -11,12 +13,12 @@ typedef struct clamp_module{
 
 static void tick(module *_m, int elapsed){
   clamp_module *m=(clamp_module *)_m;
-  int32_t result=m->input.signal.value;
+  int32_t in=m->input.signal.value;
   int32_t max=m->input.max.value;
   int32_t min=m->input.min.value;
-  if(result>max)result=max;
-  if(result<min)result=min;
-  m->output.value=result;
+  if(in>max)in=max;
+  if(in<min)in=min;
+  m->output.value=in;
   set_output(&m->output);
   }
 

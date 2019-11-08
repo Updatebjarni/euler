@@ -1,0 +1,25 @@
+create prio(voices=1)
+create arpp(steps 32) as ARPP
+create sid
+
+connect mog/lower ARPP/keys
+connect mog/lower prio-1
+
+set ARPP/gatelength 6V
+set ARPP/ticksperbeat 180
+config ARPP (on      1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1)
+config ARPP (num     0 1 2 3  0 1 2 3  0 1 2 3  0 1 2 3  0 2 1 0  3 2 1 0  3 2 1 0  3 2 1 0)
+config ARPP (otransp 0 0 0 0  1 1 1 1  2 2 2 2  3 3 3 3  4 3 3 3  2 2 2 2  1 1 1 1  0 0 0 0)
+
+connect ARPP/gate sid/chip[0]/voice[0]/gate
+;connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect ARPP/pitch sid/chip[0]/voice[0]/pitch
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/voice[0]/triangle 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 5
+
+run sid

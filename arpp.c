@@ -7,22 +7,41 @@
 
 #include"arpp.spec.c"
 
+typedef enum{
+  WRAP, OCTAVE, IGNORE
+}keywrap;
+
+typedef enum{
+  HOLD, GLIDE
+}holdbehavior;
+
 typedef struct arpp_module{
   MODULE_BASE
   int steps; // Size of sequence
   int time; // Time since start
   int keys; // Number of keys held
   int recent;
-  int32_t *num;
-  int32_t *on;
-  int32_t *tie;
-  int32_t *ntransp;
-  int32_t *otransp;
+  int32_t *num; // Play the given key or random if negative
+  int32_t *on;  // Plays this step if true
+  int32_t *hold; // TODO
+  int32_t *ntransp; // Note transpose
+  int32_t *otransp; // Octave transpose
   int32_t held[256];
   }arpp_module;
 
-static int keyfind(int n, int32_t *heldk){
+// Find the n:th key pressed from the left 
+// among all held keys. Indexed from zero.
+static int keyfind(int n, int numkeys, keywrap mode, int32_t *heldk){
   int counter=0;
+  if (numkeys==0)
+    return -1;
+  switch(mode){
+    case WRAP:
+      n%=numkeys;
+      break;
+    default:
+      break;
+  }
   for(int i=0; i<256; ++i){
     if (heldk[i]){
       if (counter==n)
@@ -36,6 +55,8 @@ static int keyfind(int n, int32_t *heldk){
 static void tick(module *_m, int elapsed){
   arpp_module *m=(arpp_module *)_m;
   int32_t ticksperbeat=m->input.ticksperbeat.value;
+  int32_t gatelength=m->input.gatelength.value;
+  double dt=(double)gatelength/(double)CVMAX;
 
   key_events *v=&(m->input.keys.value);
   for(int i=0; i<v->len; ++i){
@@ -56,12 +77,12 @@ static void tick(module *_m, int elapsed){
   int32_t k=0;
   if (m->num[step]>=0){
     m->recent=-1; // Reset old randomized key
-    k=keyfind(m->num[step], m->held);
+    k=keyfind(m->num[step], m->keys, WRAP, m->held);
     if (k>=0)
       m->output.pitch.value=(k+m->ntransp[step]+12*m->otransp[step])*HALFNOTE;
   } else if (m->keys>0){
     int rk = rand()%m->keys;
-    k=keyfind(rk, m->held);
+    k=keyfind(rk, m->keys, WRAP, m->held);
     if (m->recent<0)
       m->recent=k;
     m->output.pitch.value=(m->recent+m->ntransp[step]+12*m->otransp[step])*HALFNOTE;
@@ -69,17 +90,23 @@ static void tick(module *_m, int elapsed){
 
   int gate=0;
   if(k>=0){
-    if (pwl<40 && m->keys>0){
+    if (pwl<(double)ticksperbeat*dt && m->keys>0 && m->on[step]){
       m->output.gate.value=1;
     } else {
-      if (!m->tie[step])
+      if (!m->hold[step])
 	m->output.gate.value=0;
     }
+  } else {
+    m->output.gate.value=0;
   }
 
   set_output(&m->output.gate);
   set_output(&m->output.pitch);
-  m->time+=elapsed;
+
+  if (m->keys>0)
+    m->time+=elapsed;
+  else
+    m->time=0;
 }
 
 static void config(module *_m, char **argv){
@@ -101,11 +128,11 @@ static void config(module *_m, char **argv){
     }
   }
 
-  if (strcmp(argv[0], "tie")==0){
+  if (strcmp(argv[0], "hold")==0){
     for (int i = 0; i<m->steps; i++){
       long to;
       strtocv(argv[i+1], &to);
-      m->tie[i] = to;
+      m->hold[i] = to;
     }
   }
 
@@ -133,7 +160,7 @@ class arpp_class;
 static void destroy(module *m){
   arpp_module *_m = (arpp_module*)m;
   free(_m->on);
-  free(_m->tie);
+  free(_m->hold);
   free(_m->num);
   free(_m->ntransp);
   free(_m->otransp);
@@ -162,14 +189,14 @@ static module *create(char **argv){
     m->held[i]=0;
 
   m->on=malloc(sizeof(int32_t)*m->steps);
-  m->tie=malloc(sizeof(int32_t)*m->steps);
+  m->hold=malloc(sizeof(int32_t)*m->steps);
   m->num=malloc(sizeof(int32_t)*m->steps);
   m->ntransp=malloc(sizeof(int32_t)*m->steps);
   m->otransp=malloc(sizeof(int32_t)*m->steps);
 
   for (int i=0; i<m->steps; ++i){
     m->on[i]=0;
-    m->tie[i]=0;
+    m->hold[i]=0;
     m->num[i]=0;
     m->ntransp[i]=0;
     m->otransp[i]=0;

@@ -1,5 +1,6 @@
 input {
     ticksperbeat: number
+    gatelength: virtual_cv
     keys: key_events(44)
   }
 

@@ -24,52 +24,58 @@ connect prio-1/monophone[8]/gate sid/chip[2]/voice[2]/gate
 set sid/chip[0]/vol 15
 set sid/chip[0]/voice[0]/saw 1
 set sid/chip[0]/voice[0]/attack 0
-set sid/chip[0]/voice[0]/decay 0
-set sid/chip[0]/voice[0]/sustain 15
-set sid/chip[0]/voice[0]/release 0
+set sid/chip[0]/voice[0]/decay 12
+set sid/chip[0]/voice[0]/sustain 4
+set sid/chip[0]/voice[0]/release 6
+
 set sid/chip[0]/voice[1]/saw 1
 set sid/chip[0]/voice[1]/attack 0
-set sid/chip[0]/voice[1]/decay 0
-set sid/chip[0]/voice[1]/sustain 15
-set sid/chip[0]/voice[1]/release 0
+set sid/chip[0]/voice[1]/decay 12
+set sid/chip[0]/voice[1]/sustain 4
+set sid/chip[0]/voice[1]/release 6
+
 set sid/chip[0]/voice[2]/saw 1
 set sid/chip[0]/voice[2]/attack 0
-set sid/chip[0]/voice[2]/decay 0
-set sid/chip[0]/voice[2]/sustain 15
-set sid/chip[0]/voice[2]/release 0
+set sid/chip[0]/voice[2]/decay 12
+set sid/chip[0]/voice[2]/sustain 4
+set sid/chip[0]/voice[2]/release 6
 
 set sid/chip[1]/vol 15
 set sid/chip[1]/voice[0]/saw 1
 set sid/chip[1]/voice[0]/attack 0
-set sid/chip[1]/voice[0]/decay 0
-set sid/chip[1]/voice[0]/sustain 15
-set sid/chip[1]/voice[0]/release 0
+set sid/chip[1]/voice[0]/decay 12
+set sid/chip[1]/voice[0]/sustain 4
+set sid/chip[1]/voice[0]/release 6
+
 set sid/chip[1]/voice[1]/saw 1
 set sid/chip[1]/voice[1]/attack 0
-set sid/chip[1]/voice[1]/decay 0
-set sid/chip[1]/voice[1]/sustain 15
-set sid/chip[1]/voice[1]/release 0
+set sid/chip[1]/voice[1]/decay 12
+set sid/chip[1]/voice[1]/sustain 4
+set sid/chip[1]/voice[1]/release 6
+
 set sid/chip[1]/voice[2]/saw 1
 set sid/chip[1]/voice[2]/attack 0
-set sid/chip[1]/voice[2]/decay 0
-set sid/chip[1]/voice[2]/sustain 15
-set sid/chip[1]/voice[2]/release 0
+set sid/chip[1]/voice[2]/decay 12
+set sid/chip[1]/voice[2]/sustain 4
+set sid/chip[1]/voice[2]/release 6
 
 set sid/chip[2]/vol 15
 set sid/chip[2]/voice[0]/saw 1
 set sid/chip[2]/voice[0]/attack 0
-set sid/chip[2]/voice[0]/decay 0
-set sid/chip[2]/voice[0]/sustain 15
-set sid/chip[2]/voice[0]/release 0
+set sid/chip[2]/voice[0]/decay 12
+set sid/chip[2]/voice[0]/sustain 4
+set sid/chip[2]/voice[0]/release 6
+
 set sid/chip[2]/voice[1]/saw 1
 set sid/chip[2]/voice[1]/attack 0
-set sid/chip[2]/voice[1]/decay 0
-set sid/chip[2]/voice[1]/sustain 15
-set sid/chip[2]/voice[1]/release 0
+set sid/chip[2]/voice[1]/decay 12
+set sid/chip[2]/voice[1]/sustain 4
+set sid/chip[2]/voice[1]/release 6
+
 set sid/chip[2]/voice[2]/saw 1
 set sid/chip[2]/voice[2]/attack 0
-set sid/chip[2]/voice[2]/decay 0
-set sid/chip[2]/voice[2]/sustain 15
-set sid/chip[2]/voice[2]/release 0
+set sid/chip[2]/voice[2]/decay 12
+set sid/chip[2]/voice[2]/sustain 4
+set sid/chip[2]/voice[2]/release 6
 
 run sid

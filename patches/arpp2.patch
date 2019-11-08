@@ -1,18 +1,23 @@
 create prio(voices=1)
 create arpp(steps 16) as ARPP1
 create arpp(steps 16) as ARPP2
+create arpp(steps 4) as ARPP3
+
 create sid
 
 connect mog/lower ARPP1/keys
 connect mog/lower ARPP2/keys
+connect mog/lower ARPP3/keys
 
+set ARPP1/gatelength 5V
 set ARPP1/ticksperbeat 180
 config ARPP1 (on       1 0 1 0  1 1 1 0  1 0 1 0  1 1 1 0)
 config ARPP1 (num      3 0 0 2  0 1 0 2  1 1 1 2  3 0 1 2)
-config ARPP1 (tie      0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0)
+config ARPP1 (hold     0 0 0 0  0 1 0 0  0 0 0 0  0 1 0 0)
 config ARPP1 (ntransp  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0)
 config ARPP1 (otransp  0 0 0 0  1 0 0 0  0 0 0 0  1 0 0 0)
 
+set ARPP2/gatelength 3V
 set ARPP2/ticksperbeat 180
 config ARPP2 (on       1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1)
 config ARPP2 (num      0 1 2 3  0 1 2 3  0 1 2 3  0 1 2 3)
@@ -20,6 +25,16 @@ config ARPP2 (tie      0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0)
 config ARPP2 (ntransp  0 0 0 0  0 0 0 5  0 0 0 0  0 0 0 5)
 config ARPP2 (otransp  0 0 0 0  1 1 1 1  0 0 0 0  1 1 1 1)
 
+set ARPP3/gatelength 7V
+set ARPP3/ticksperbeat 360
+config ARPP3 (on       1 1 1 1)
+config ARPP3 (num      0 0 0 0)
+config ARPP3 (tie      0 0 0 0)
+config ARPP3 (ntransp  0 0 0 0)
+config ARPP3 (otransp  -1 0 -1 0)
+
+connect ARPP3/gate sid/chip[2]/voice[0]/gate
+connect ARPP3/pitch sid/chip[2]/voice[0]/pitch
 connect ARPP2/gate sid/chip[0]/voice[0]/gate
 connect ARPP2/pitch sid/chip[0]/voice[0]/pitch
 connect ARPP1/gate sid/chip[1]/voice[0]/gate
@@ -32,11 +47,21 @@ set sid/chip[0]/voice[0]/decay 3
 set sid/chip[0]/voice[0]/sustain 6
 set sid/chip[0]/voice[0]/release 5
 
-set sid/chip[1]/vol 12
+set sid/chip[1]/vol 6
 set sid/chip[1]/voice[0]/saw 1
 set sid/chip[1]/voice[0]/attack 0
 set sid/chip[1]/voice[0]/decay 0
 set sid/chip[1]/voice[0]/sustain 12
 set sid/chip[1]/voice[0]/release 2
+
+set sid/chip[2]/vol 12
+set sid/chip[2]/cutoff 400
+set sid/chip[2]/lp 1
+set sid/chip[2]/voice[0]/filter 1
+set sid/chip[2]/voice[0]/saw 1
+set sid/chip[2]/voice[0]/attack 0
+set sid/chip[2]/voice[0]/decay 0
+set sid/chip[2]/voice[0]/sustain 12
+set sid/chip[2]/voice[0]/release 5
 
 run sid

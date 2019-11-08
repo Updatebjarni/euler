@@ -9,23 +9,9 @@ connect mog/lower prio-1
 ; SHAKER
 
 set poly-1/ticksperloop 2400
-config poly-1 (divisor 7 5 11 3 1 1 1 1)
+config poly-1 (divisor 2 5 3 3 1 1 1 1)
 connect poly-1/gates[0]/gate crums/b
 ;connect poly-1/gates[1]/gate crums/d
 connect poly-1/gates[2]/gate crums/br
 
-connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
-
-set sid/chip[0]/vol 8
-set sid/chip[0]/cutoff 1324
-set sid/chip[0]/lp 1
-set sid/chip[0]/voice[0]/filter 1
-set sid/chip[0]/voice[0]/pulse 1
-set sid/chip[0]/voice[0]/pw 2000
-set sid/chip[0]/voice[0]/attack 0
-set sid/chip[0]/voice[0]/decay 3
-set sid/chip[0]/voice[0]/sustain 5
-set sid/chip[0]/voice[0]/release 0
-
-run sid
 run crums

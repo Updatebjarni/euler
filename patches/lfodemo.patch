@@ -5,7 +5,7 @@ create lfo
 create prio(voices=1)
 connect mog/lower prio-1
 
-set lfo-1/frequency 200
+set lfo-1/frequency 0.5Hz
 set lfo-1/amplitude 1024
 set lfo-1/waveform 0
 

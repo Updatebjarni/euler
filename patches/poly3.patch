@@ -11,8 +11,8 @@ connect mog/lower prio-1
 ; KICK
 ; SHAKER
 
-set poly-1/ticksperloop 2000
-config poly-1 (divisor 3 2 11 3 1 1 1 1)
+set poly-1/ticksperloop 1500
+config poly-1 (divisor 5 4 11 3 1 1 1 1)
 connect poly-1/gates[0]/gate conv-1/gate
 connect conv-1/virtual_cv add-1/signal
 connect poly-1/gates[1]/gate conv-2/gate
@@ -22,7 +22,7 @@ connect conv-3/gate sid/chip[0]/voice[0]/gate
 
 connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
 
-set sid/chip[0]/vol 8
+set sid/chip[0]/vol 12
 set sid/chip[0]/cutoff 700
 set sid/chip[0]/lp 1
 set sid/chip[0]/voice[0]/filter 1

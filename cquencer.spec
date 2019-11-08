@@ -6,7 +6,8 @@ input {
 
 output {
     pitch: virtual_cv
-    value1: virtual_cv
-    value2: virtual_cv
+    data: array(4) of {
+	value: virtual_cv
+    }
     gate: logic
   }

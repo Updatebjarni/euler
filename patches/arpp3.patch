@@ -1,31 +1,43 @@
 create prio(voices=1)
 create arpp(steps 8) as ARPP2
+create gdelay
+create sdelay
 create sid
 
 connect mog/lower ARPP2/keys
 
-set ARPP2/ticksperbeat 180
+set ARPP2/gatelength 5V
+set ARPP2/ticksperbeat 300
 config ARPP2 (on       1 1 1 1  1 1 1 1)
-config ARPP2 (num      -1 0 -1 0  -1 0 -1 0)
-config ARPP2 (tie      0 0 0 0  0 0 0 0)
+config ARPP2 (num      0 0 1 2  3 2 1 0)
+config ARPP2 (tie      1 1 0 0  0 0 0 0)
 config ARPP2 (ntransp  0 0 0 0  0 0 0 0)
-config ARPP2 (otransp  0 0 0 0  0 0 0 0)
+config ARPP2 (otransp  -1 0 0 0  0 0 0 0)
 
 connect ARPP2/gate sid/chip[0]/voice[0]/gate
 connect ARPP2/pitch sid/chip[0]/voice[0]/pitch
+connect ARPP2/gate gdelay-1/gate
+connect ARPP2/pitch sdelay-1/signal
+set sdelay-1/delay 210
+set gdelay-1/delay 210
+connect gdelay-1 sid/chip[0]/voice[1]/gate
+connect sdelay-1 sid/chip[0]/voice[1]/pitch
 
 set sid/chip[0]/vol 12
-set sid/chip[0]/voice[0]/triangle 1
+set sid/chip[0]/lp 1
+set sid/chip[0]/cutoff 1424
+set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/voice[0]/filter 1
 set sid/chip[0]/voice[0]/attack 0
 set sid/chip[0]/voice[0]/decay 3
-set sid/chip[0]/voice[0]/sustain 6
+set sid/chip[0]/voice[0]/sustain 8
 set sid/chip[0]/voice[0]/release 5
 
-set sid/chip[1]/vol 12
-set sid/chip[1]/voice[0]/saw 1
-set sid/chip[1]/voice[0]/attack 0
-set sid/chip[1]/voice[0]/decay 0
-set sid/chip[1]/voice[0]/sustain 12
-set sid/chip[1]/voice[0]/release 2
+set sid/chip[0]/voice[1]/saw 1
+set sid/chip[0]/voice[1]/filter 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 3
+set sid/chip[0]/voice[1]/sustain 8
+set sid/chip[0]/voice[1]/release 5
 
 run sid
