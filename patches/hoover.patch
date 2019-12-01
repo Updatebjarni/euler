@@ -1,44 +1,93 @@
 create sid
-create add
-create add
-create slew
-create lfo
-create prio(voices=1)
-connect mog/lower prio-1
+create add () as TUP
+create add () as TDOWN
+create slew () as SLEW
+create add () as DET1
+create add () as DET2
+create add () as DET3
+create prio(voices=1) as PRIO
+connect mog/lower PRIO
 
-set lfo-1/frequency 200
-set lfo-1/amplitude 1024
-set lfo-1/waveform 0
+connect PRIO/monophone[0]/pitch SLEW/signal
+connect SLEW TDOWN/signal
+connect SLEW TUP/signal
 
-connect prio-1/monophone[0]/pitch slew-1/signal
-set slew-1/rate 9.2V
-connect slew-1 add-2/signal
-set add-2/control -12H
-connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
-connect prio-1/monophone[0]/gate sid/chip[0]/voice[1]/gate
+connect TDOWN DET1/signal
+connect SLEW DET2/signal
+connect TUP DET3/signal
 
-set add-1/signal 2048
+set DET1/control 0.016V
+set DET2/control 0.016V
+set DET3/control 0.016V
 
-connect add-2 sid/chip[0]/voice[0]/pitch
-connect slew-1 sid/chip[0]/voice[1]/pitch
+set SLEW/rate 9.7V
+set TDOWN/control -12H
+set TUP/control +12H
 
-connect add-1 sid/chip[0]/voice[0]/pw
-connect add-1 sid/chip[0]/voice[1]/pw
-connect lfo-1 add-1/control
+connect TDOWN sid/chip[0]/voice[0]/pitch
+connect DET1 sid/chip[0]/voice[1]/pitch
+connect PRIO/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect PRIO/monophone[0]/gate sid/chip[0]/voice[1]/gate
 
+connect SLEW sid/chip[1]/voice[0]/pitch
+connect DET2 sid/chip[1]/voice[1]/pitch
+connect PRIO/monophone[0]/gate sid/chip[1]/voice[0]/gate
+connect PRIO/monophone[0]/gate sid/chip[1]/voice[1]/gate
+
+connect TUP sid/chip[2]/voice[0]/pitch
+connect DET3 sid/chip[2]/voice[1]/pitch
+connect PRIO/monophone[0]/gate sid/chip[2]/voice[0]/gate
+connect PRIO/monophone[0]/gate sid/chip[2]/voice[1]/gate
+
+; SID VOICE GROUPING CHIP 0
 set sid/chip[0]/vol 12
 set sid/chip[0]/voice[0]/pulse 1
+set sid/chip[0]/voice[0]/pw 1024
 set sid/chip[0]/voice[0]/attack 0
 set sid/chip[0]/voice[0]/decay 0
 set sid/chip[0]/voice[0]/sustain 12
 set sid/chip[0]/voice[0]/release 0
 set sid/chip[0]/voice[0]/filter 0
-
 set sid/chip[0]/voice[1]/pulse 1
+set sid/chip[0]/voice[1]/pw 1024
 set sid/chip[0]/voice[1]/attack 0
 set sid/chip[0]/voice[1]/decay 0
 set sid/chip[0]/voice[1]/sustain 12
 set sid/chip[0]/voice[1]/release 0
 set sid/chip[0]/voice[1]/filter 0
+
+; SID VOICE GROUPING CHIP 1
+set sid/chip[1]/vol 12
+set sid/chip[1]/voice[0]/pulse 1
+set sid/chip[1]/voice[0]/pw 1024
+set sid/chip[1]/voice[0]/attack 0
+set sid/chip[1]/voice[0]/decay 0
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 0
+set sid/chip[1]/voice[0]/filter 0
+set sid/chip[1]/voice[1]/pulse 1
+set sid/chip[1]/voice[1]/pw 1024
+set sid/chip[1]/voice[1]/attack 0
+set sid/chip[1]/voice[1]/decay 0
+set sid/chip[1]/voice[1]/sustain 12
+set sid/chip[1]/voice[1]/release 0
+set sid/chip[1]/voice[1]/filter 0
+
+; SID VOICE GROUPING CHIP 2
+set sid/chip[2]/vol 12
+set sid/chip[2]/voice[0]/pulse 1
+set sid/chip[2]/voice[0]/pw 1024
+set sid/chip[2]/voice[0]/attack 0
+set sid/chip[2]/voice[0]/decay 0
+set sid/chip[2]/voice[0]/sustain 12
+set sid/chip[2]/voice[0]/release 0
+set sid/chip[2]/voice[0]/filter 0
+set sid/chip[2]/voice[1]/pulse 1
+set sid/chip[2]/voice[1]/pw 1024
+set sid/chip[2]/voice[1]/attack 0
+set sid/chip[2]/voice[1]/decay 0
+set sid/chip[2]/voice[1]/sustain 12
+set sid/chip[2]/voice[1]/release 0
+set sid/chip[2]/voice[1]/filter 0
 
 run sid

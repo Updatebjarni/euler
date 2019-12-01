@@ -1,0 +1,69 @@
+create prio(voices=3) as PRIO
+create add() as DETU1
+create add() as DETU2
+create add() as DETU3
+create sid
+
+connect mog/lower PRIO
+
+set DETU1/control 0.01V
+set DETU2/control 0.01V
+set DETU3/control 0.01V
+
+connect PRIO/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect PRIO/monophone[1]/gate sid/chip[1]/voice[0]/gate
+connect PRIO/monophone[2]/gate sid/chip[2]/voice[0]/gate
+connect PRIO/monophone[0]/gate sid/chip[0]/voice[1]/gate
+connect PRIO/monophone[1]/gate sid/chip[1]/voice[1]/gate
+connect PRIO/monophone[2]/gate sid/chip[2]/voice[1]/gate
+connect PRIO/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
+connect PRIO/monophone[1]/pitch sid/chip[1]/voice[0]/pitch
+connect PRIO/monophone[2]/pitch sid/chip[2]/voice[0]/pitch
+connect PRIO/monophone[0]/pitch DETU1/signal
+connect PRIO/monophone[1]/pitch DETU2/signal
+connect PRIO/monophone[2]/pitch DETU3/signal
+connect DETU1 sid/chip[0]/voice[1]/pitch
+connect DETU2 sid/chip[1]/voice[1]/pitch
+connect DETU3 sid/chip[2]/voice[1]/pitch
+
+
+
+
+set sid/chip[0]/vol 12
+set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/voice[0]/attack 4
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 5
+set sid/chip[0]/voice[1]/saw 1
+set sid/chip[0]/voice[1]/attack 4
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 5
+
+set sid/chip[1]/vol 12
+set sid/chip[1]/voice[0]/saw 1
+set sid/chip[1]/voice[0]/attack 4
+set sid/chip[1]/voice[0]/decay 0
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 5
+set sid/chip[1]/voice[1]/saw 1
+set sid/chip[1]/voice[1]/attack 4
+set sid/chip[1]/voice[1]/decay 0
+set sid/chip[1]/voice[1]/sustain 12
+set sid/chip[1]/voice[1]/release 5
+
+set sid/chip[2]/vol 12
+set sid/chip[2]/voice[0]/saw 1
+set sid/chip[2]/voice[0]/attack 4
+set sid/chip[2]/voice[0]/decay 0
+set sid/chip[2]/voice[0]/sustain 12
+set sid/chip[2]/voice[0]/release 5
+set sid/chip[2]/voice[1]/saw 1
+set sid/chip[2]/voice[1]/attack 4
+set sid/chip[2]/voice[1]/decay 0
+set sid/chip[2]/voice[1]/sustain 12
+set sid/chip[2]/voice[1]/release 5
+
+
+run sid

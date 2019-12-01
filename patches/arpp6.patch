@@ -1,0 +1,72 @@
+; Arpeggio with delay
+create prio(voices=1) as PRIOLEAD
+create arpp(steps 16) as ARPP2
+create gdelay
+create sdelay
+create sid
+create add () as DETUNE
+create add () as DETLEAD
+create add () as TRANSPOSE
+
+create keyboard(lower split into 2 at C#5) as KEYBOARD
+connect KEYBOARD/range[0] ARPP2/keys
+connect KEYBOARD/range[1] PRIOLEAD
+connect PRIOLEAD/monophone[0]/gate sid/chip[1]/voice[0]/gate
+connect PRIOLEAD/monophone[0]/gate sid/chip[1]/voice[1]/gate
+connect PRIOLEAD/monophone[0]/pitch sid/chip[1]/voice[0]/pitch
+connect PRIOLEAD/monophone[0]/pitch DETLEAD/signal
+set DETLEAD/control 0.005V
+connect DETLEAD sid/chip[1]/voice[1]/pitch
+
+set ARPP2/gatelength 8V
+set ARPP2/ticksperbeat 120
+config ARPP2 (on       1 0 1 1  1 0 1 0  0 0 1 0  0 0 1 1)
+config ARPP2 (num      0 0 1 2  0 0 0 0  0 0 0 0  0 0 0 0)
+config ARPP2 (otransp  0 0 2 2  1 0 0 0  0 0 1 0  0 0 0 0)
+
+connect ARPP2/pitch TRANSPOSE/signal
+set TRANSPOSE/control -2V
+
+connect ARPP2/gate sid/chip[0]/voice[0]/gate
+connect TRANSPOSE sid/chip[0]/voice[0]/pitch
+connect ARPP2/gate sid/chip[0]/voice[1]/gate
+connect TRANSPOSE DETUNE/signal
+set DETUNE/control 0.005V
+connect DETUNE sid/chip[0]/voice[1]/pitch
+
+set sid/chip[0]/vol 15
+set sid/chip[0]/lp 1
+set sid/chip[0]/cutoff 1124
+set sid/chip[0]/voice[0]/saw 1
+set sid/chip[0]/voice[0]/filter 1
+set sid/chip[0]/voice[0]/attack 0
+set sid/chip[0]/voice[0]/decay 3
+set sid/chip[0]/voice[0]/sustain 12
+set sid/chip[0]/voice[0]/release 5
+set sid/chip[0]/voice[1]/saw 1
+set sid/chip[0]/voice[1]/filter 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 3
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 5
+
+set sid/chip[1]/vol 6
+set sid/chip[1]/lp 1
+set sid/chip[1]/cutoff 1324
+set sid/chip[1]/voice[0]/saw 1
+set sid/chip[1]/voice[1]/pw 1024
+set sid/chip[1]/voice[0]/filter 1
+set sid/chip[1]/voice[0]/attack 3
+set sid/chip[1]/voice[0]/decay 3
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 5
+
+set sid/chip[1]/voice[1]/saw 1
+set sid/chip[1]/voice[1]/pw 1024
+set sid/chip[1]/voice[1]/filter 1
+set sid/chip[1]/voice[1]/attack 3
+set sid/chip[1]/voice[1]/decay 3
+set sid/chip[1]/voice[1]/sustain 12
+set sid/chip[1]/voice[1]/release 5
+
+run sid

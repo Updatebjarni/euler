@@ -61,9 +61,7 @@ static void next_state(adsr_module *m, int state){
 
 static void tick(module *_m, int elapsed) {
   adsr_module *m=(adsr_module *)_m;
-
   log_append(m, -1);
-
   readinputs(m);
     
   double arate=0;
@@ -74,7 +72,6 @@ static void tick(module *_m, int elapsed) {
   if (m->sustain <= m->max && m->sustain >= m->min){
     double delta=e_max(m->max, m->min) - e_min(m->max, m->min);
     double susdist=m->sustain - e_min(m->max, m->min); 
-    
     if (delta != 0)
       suslevel = susdist/delta;
   }
@@ -91,7 +88,7 @@ static void tick(module *_m, int elapsed) {
     case IDLE:
       if (m->input.gate.value) {
         next_state(m, ATTACK);
-        m->time=0; // reset timer
+        m->time=0;
         }
       m->currentamp=0.0;
       break;
@@ -135,7 +132,6 @@ static void tick(module *_m, int elapsed) {
 	next_state(m, ATTACK);
 	m->time=0;
       }
-	
       m->currentamp-=rrate;
       break;
     }

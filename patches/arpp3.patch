@@ -1,3 +1,4 @@
+; Arpeggio with delay
 create prio(voices=1)
 create arpp(steps 8) as ARPP2
 create gdelay
@@ -10,9 +11,6 @@ set ARPP2/gatelength 5V
 set ARPP2/ticksperbeat 300
 config ARPP2 (on       1 1 1 1  1 1 1 1)
 config ARPP2 (num      0 0 1 2  3 2 1 0)
-config ARPP2 (tie      1 1 0 0  0 0 0 0)
-config ARPP2 (ntransp  0 0 0 0  0 0 0 0)
-config ARPP2 (otransp  -1 0 0 0  0 0 0 0)
 
 connect ARPP2/gate sid/chip[0]/voice[0]/gate
 connect ARPP2/pitch sid/chip[0]/voice[0]/pitch

@@ -1,9 +1,11 @@
+#define _GNU_SOURCE
+
 #include<math.h>
 #include<stdint.h>
 #include"orgel.h"
+#include<stdlib.h>
 
 #include"add.spec.c"
-
 
 typedef struct add_module{
   MODULE_BASE

@@ -3,23 +3,23 @@ create prio(voices=1)
 create cquencer(steps 8)
 create sid
 create slew
-
-create add
+create add () as TRANSPOSE
 
 ; BASS
 set cquencer-1/ticksperbeat 70
 config cquencer-1 (pitches 36H 36H 36H 48H 60 60H 60H 72H)
 config cquencer-1 (length  70 70 0 0 0 0 0 0)
-config cquencer-1 (data 1  9.6V 9.6V 0V 0V 0V 0V 0V 9.6V)
 
 connect cquencer-1/gate sid/chip[0]/voice[0]/gate
-connect cquencer-1/pitch slew-1/signal
+connect cquencer-1/pitch TRANSPOSE/signal
+set TRANSPOSE/control -0.5V
+connect TRANSPOSE slew-1/signal
 
 ;connect cquencer-1/value1 slew-1/rate
-set slew-1/rate 9.7V
+set slew-1/rate 9.8V
 connect slew-1 sid/chip[0]/voice[0]/pitch
 
-set sid/chip[0]/vol 12
+set sid/chip[0]/vol 15
 set sid/chip[0]/lp 1
 
 set sid/chip[0]/cutoff 1020
@@ -27,6 +27,7 @@ connect mog/dial[0] sid/chip[0]/cutoff
 set mog/dial_res[0] 1024
 
 set sid/chip[0]/voice[0]/triangle 1
+set sid/chip[0]/voice[0]/pw 1024
 set sid/chip[0]/voice[0]/filter 1
 set sid/chip[0]/voice[0]/attack 3
 set sid/chip[0]/voice[0]/decay 0

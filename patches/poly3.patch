@@ -7,30 +7,88 @@ create add
 create conv
 connect mog/lower prio-1
 
-; SNARE
-; KICK
-; SHAKER
+set poly-1/ticksperloop 4000
+set poly-1/gatelength 3V
+config poly-1 (divisor 17 11 7 5 3 2 1 1)
+connect poly-1/gates[0]/gate sid/chip[0]/voice[0]/gate
+connect poly-1/gates[1]/gate sid/chip[0]/voice[1]/gate
+connect poly-1/gates[2]/gate sid/chip[0]/voice[2]/gate
 
-set poly-1/ticksperloop 1500
-config poly-1 (divisor 5 4 11 3 1 1 1 1)
-connect poly-1/gates[0]/gate conv-1/gate
-connect conv-1/virtual_cv add-1/signal
-connect poly-1/gates[1]/gate conv-2/gate
-connect conv-2/virtual_cv add-1/control
-connect add-1 conv-3/virtual_cv
-connect conv-3/gate sid/chip[0]/voice[0]/gate
+connect poly-1/gates[3]/gate sid/chip[1]/voice[0]/gate
+connect poly-1/gates[4]/gate sid/chip[1]/voice[1]/gate
+connect poly-1/gates[5]/gate sid/chip[1]/voice[2]/gate
 
-connect prio-1/monophone[0]/pitch sid/chip[0]/voice[0]/pitch
+set sid/chip[0]/voice[0]/pitch C6
+set sid/chip[0]/voice[1]/pitch D#6
+set sid/chip[0]/voice[2]/pitch F#6
+
+set sid/chip[1]/voice[0]/pitch A6
+set sid/chip[1]/voice[1]/pitch C7
+set sid/chip[1]/voice[2]/pitch D#7
 
 set sid/chip[0]/vol 12
 set sid/chip[0]/cutoff 700
 set sid/chip[0]/lp 1
-set sid/chip[0]/voice[0]/filter 1
+
+set sid/chip[0]/voice[0]/filter 0
 set sid/chip[0]/voice[0]/pulse 1
 set sid/chip[0]/voice[0]/pw 2000
 set sid/chip[0]/voice[0]/attack 0
-set sid/chip[0]/voice[0]/decay 3
-set sid/chip[0]/voice[0]/sustain 5
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 12
 set sid/chip[0]/voice[0]/release 0
+
+set sid/chip[0]/voice[1]/filter 0
+set sid/chip[0]/voice[1]/pulse 1
+set sid/chip[0]/voice[1]/pw 2000
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 0
+
+set sid/chip[0]/voice[2]/filter 0
+set sid/chip[0]/voice[2]/pulse 1
+set sid/chip[0]/voice[2]/pw 2000
+set sid/chip[0]/voice[2]/attack 0
+set sid/chip[0]/voice[2]/decay 0
+set sid/chip[0]/voice[2]/sustain 12
+set sid/chip[0]/voice[2]/release 0
+
+
+
+
+set sid/chip[1]/vol 12
+set sid/chip[1]/cutoff 700
+set sid/chip[1]/lp 1
+
+set sid/chip[1]/voice[0]/filter 0
+set sid/chip[1]/voice[0]/pulse 1
+set sid/chip[1]/voice[0]/pw 2000
+set sid/chip[1]/voice[0]/attack 0
+set sid/chip[1]/voice[0]/decay 0
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 0
+
+set sid/chip[1]/voice[1]/filter 0
+set sid/chip[1]/voice[1]/pulse 1
+set sid/chip[1]/voice[1]/pw 2000
+set sid/chip[1]/voice[1]/attack 0
+set sid/chip[1]/voice[1]/decay 0
+set sid/chip[1]/voice[1]/sustain 12
+set sid/chip[1]/voice[1]/release 0
+
+set sid/chip[1]/voice[2]/filter 0
+set sid/chip[1]/voice[2]/pulse 1
+set sid/chip[1]/voice[2]/pw 2000
+set sid/chip[1]/voice[2]/attack 0
+set sid/chip[1]/voice[2]/decay 0
+set sid/chip[1]/voice[2]/sustain 12
+set sid/chip[1]/voice[2]/release 0
+
+
+
+
+
+
 
 run sid

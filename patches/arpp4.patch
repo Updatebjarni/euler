@@ -1,25 +1,103 @@
-create prio(voices=1)
-create arpp(steps 32) as ARPP
+create prio(voices=1) as PEDALPRIO
+create prio(voices=1) as TESTPRIO
+create arpp(steps 14) as ARPP1
+create arpp(steps 14) as DRUMS
+create arpp(steps 14) as ARPP2
+create pulse() as BLIPP
+create add() as BTRANSP
+create add() as DETU1
+create add() as DETU2
 create sid
+create keyboard(lower split into 2 at E5) as KEYBOARD
 
-connect mog/lower ARPP/keys
-connect mog/lower prio-1
+connect KEYBOARD/range[0] ARPP1/keys
+connect KEYBOARD/range[0] DRUMS/keys
+connect KEYBOARD/range[1] ARPP2/keys
+;connect KEYBOARD/range[1] TESTPRIO
 
-set ARPP/gatelength 6V
-set ARPP/ticksperbeat 180
-config ARPP (on      1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1)
-config ARPP (num     0 1 2 3  0 1 2 3  0 1 2 3  0 1 2 3  0 2 1 0  3 2 1 0  3 2 1 0  3 2 1 0)
-config ARPP (otransp 0 0 0 0  1 1 1 1  2 2 2 2  3 3 3 3  4 3 3 3  2 2 2 2  1 1 1 1  0 0 0 0)
+connect mog/pedal PEDALPRIO
 
-connect ARPP/gate sid/chip[0]/voice[0]/gate
-;connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
-connect ARPP/pitch sid/chip[0]/voice[0]/pitch
+set ARPP1/gatelength 9.99V
+set ARPP1/ticksperbeat 140
+config ARPP1 (on   1 1 1 1  1 1 1 1  1 1 1 1  1 1)
+config ARPP1 (num  0 1 2 3  0 1 2 0  1 2 3 0  1 2)
+connect ARPP1/gate sid/chip[0]/voice[0]/gate
+connect ARPP1/pitch sid/chip[0]/voice[0]/pitch
+connect ARPP1/gate sid/chip[0]/voice[1]/gate
 
+connect ARPP1/pitch DETU1/signal
+connect DETU1 sid/chip[0]/voice[1]/pitch
+set DETU1/control 0.015V
+
+connect PEDALPRIO/monophone[0]/gate sid/chip[1]/voice[0]/gate
+connect PEDALPRIO/monophone[0]/gate sid/chip[1]/voice[1]/gate
+connect PEDALPRIO/monophone[0]/pitch sid/chip[1]/voice[0]/pitch
+connect PEDALPRIO/monophone[0]/pitch DETU2/signal
+connect DETU2 sid/chip[1]/voice[1]/pitch
+set DETU2/control 0.009V
+
+set DRUMS/gatelength 7.0V
+set DRUMS/ticksperbeat 140
+config DRUMS (on      1 0 1 0  1 0 1 1  0 1 0 1  1 1)
+config DRUMS (num     0 0 0 0  0 0 0 0  0 0 0 0  0 0)
+connect DRUMS/gate sid/chip[1]/voice[2]/gate
+set sid/chip[1]/voice[2]/pitch C8
+
+set ARPP2/gatelength 5.0V
+set ARPP2/ticksperbeat 140
+config ARPP2 (on   1 1 1 1  1 1 1 1  1 1 1 1  1 1)
+config ARPP2 (num  0 1 2 3  0 1 2 0  1 2 3 0  1 2)
+set BLIPP/length 30
+set BLIPP/height 1V
+connect ARPP2/gate BLIPP/gate
+connect BLIPP BTRANSP/signal
+connect ARPP2/pitch BTRANSP/control
+connect BTRANSP sid/chip[2]/voice[0]/pitch
+connect ARPP2/gate  sid/chip[2]/voice[0]/gate
+
+;connect TESTPRIO/monophone[0]/pitch sid/chip[2]/voice[0]/pitch
+;connect TESTPRIO/monophone[0]/gate  sid/chip[2]/voice[0]/gate
+
+; ARPEGGIO LOW
 set sid/chip[0]/vol 12
-set sid/chip[0]/voice[0]/triangle 1
+set sid/chip[0]/voice[0]/saw 1
 set sid/chip[0]/voice[0]/attack 0
 set sid/chip[0]/voice[0]/decay 0
 set sid/chip[0]/voice[0]/sustain 12
 set sid/chip[0]/voice[0]/release 5
+set sid/chip[0]/voice[1]/saw 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 12
+set sid/chip[0]/voice[1]/release 5
+
+; ARPEGGIO HIGH
+set sid/chip[2]/vol 12
+set sid/chip[2]/voice[0]/saw 1
+set sid/chip[2]/voice[0]/attack 0
+set sid/chip[2]/voice[0]/decay 0
+set sid/chip[2]/voice[0]/sustain 12
+set sid/chip[2]/voice[0]/release 0
+
+; BASS
+set sid/chip[1]/vol 12
+set sid/chip[1]/voice[0]/saw 1
+set sid/chip[1]/voice[0]/attack 0
+set sid/chip[1]/voice[0]/decay 0
+set sid/chip[1]/voice[0]/sustain 12
+set sid/chip[1]/voice[0]/release 5
+set sid/chip[1]/voice[1]/saw 1
+set sid/chip[1]/voice[1]/attack 0
+set sid/chip[1]/voice[1]/decay 0
+set sid/chip[1]/voice[1]/sustain 12
+set sid/chip[1]/voice[1]/release 5
+
+; SHAKER
+set sid/chip[1]/voice[2]/noise 1
+set sid/chip[1]/voice[2]/attack 0
+set sid/chip[1]/voice[2]/decay 2
+set sid/chip[1]/voice[2]/sustain 4
+set sid/chip[1]/voice[2]/release 0
+
 
 run sid

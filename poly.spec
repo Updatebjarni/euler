@@ -1,5 +1,6 @@
 input {
-    ticksperloop: number
+    ticksperloop: virtual_cv
+    gatelength: virtual_cv
     time: virtual_cv
   }
 

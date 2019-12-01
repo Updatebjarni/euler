@@ -11,28 +11,32 @@
 typedef struct poly_module{
   MODULE_BASE
   int time; // Time since start
+  int looptime;
   int32_t divisor[POLY_CHANNELS];
   int32_t offset[POLY_CHANNELS];
   }poly_module;
 
 static void tick(module *_m, int elapsed){
   poly_module *m=(poly_module *)_m;
-
   int ticksperloop=m->input.ticksperloop.value;
-  int curtime=m->time%ticksperloop;
-  
+  int gatelength=m->input.gatelength.value;
+  if (gatelength<0)
+    gatelength=0;
+
   for (int i=0; i<POLY_CHANNELS; i++){
-    //int v=ticksperloop/m->divisor[i];
-    int slen=ticksperloop/m->divisor[i];
-    int b=curtime%slen;
-    if (b<50)
+    int ticksperstep=ticksperloop/m->divisor[i];
+    int b=m->looptime%ticksperstep;
+    double scale=((double)gatelength/(double)CVMAX);
+    if (b<((double)ticksperstep)*scale)
       m->output.gates[i].gate.value=1;    
     else
       m->output.gates[i].gate.value=0;    
     set_output(&m->output.gates[i].gate);
   }
 
-  m->time+=elapsed;
+  m->looptime+=elapsed;
+  if (m->looptime >= ticksperloop)
+    m->looptime=0;
 }
 
 static void config(module *_m, char **argv){
@@ -63,6 +67,7 @@ static module *create(char **argv){
  
   base_module_init(m, &poly_class);
   m->time=0;
+  m->looptime=0;
   for (int i=0; i<POLY_CHANNELS; i++){
     m->divisor[i]=1;
     m->offset[i]=0;
