@@ -8,7 +8,7 @@
 #include"arpp.spec.c"
 
 typedef enum{
-  WRAP, OCTAVE, IGNORE
+  WRAP, OCTAVE1, IGNORE
 }keywrap;
 
 typedef enum{
@@ -159,11 +159,13 @@ class arpp_class;
 
 static void destroy(module *m){
   arpp_module *_m = (arpp_module*)m;
+  printf("Hullo!\n");
   free(_m->on);
   free(_m->hold);
   free(_m->num);
   free(_m->ntransp);
   free(_m->otransp);
+  printf("Hullo!\n");
 }
 
 static module *create(char **argv){

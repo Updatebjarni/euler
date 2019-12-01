@@ -1,33 +1,38 @@
 create sid
-create add
-create add
+create add() as ADDPW
+create add() as TRANSPOSE
 create lfo
 create prio(voices=1)
 connect mog/lower prio-1
 
-set lfo-1/frequency 200
-set lfo-1/amplitude 1024
+set lfo-1/frequency 0.4Hz
+set lfo-1/amplitude 500
 set lfo-1/waveform 0
 
-connect prio-1/monophone[0]/pitch add-2/signal
-set add-2/control -134200000
+connect prio-1/monophone[0]/pitch TRANSPOSE/signal
+set TRANSPOSE/control -1V
+
+connect TRANSPOSE sid/chip[0]/voice[0]/pitch
 connect prio-1/monophone[0]/gate sid/chip[0]/voice[0]/gate
+connect TRANSPOSE sid/chip[0]/voice[1]/pitch
+connect prio-1/monophone[0]/gate sid/chip[0]/voice[1]/gate
 
-set add-1/signal 2048
-connect add-2 sid/chip[0]/voice[0]/pitch
+connect lfo-1 ADDPW/signal
+set ADDPW/control 1024
+connect ADDPW sid/chip[0]/voice[0]/pw
 
-connect add-1 sid/chip[0]/voice[0]/pw
-connect lfo-1 add-1/control
-
-set sid/chip[0]/vol 12
+set sid/chip[0]/vol 15
+;set sid/chip[0]/voice[0]/pw 1024
 set sid/chip[0]/voice[0]/pulse 1
 set sid/chip[0]/voice[0]/attack 0
-set sid/chip[0]/voice[0]/decay 4
-set sid/chip[0]/voice[0]/sustain 12
-set sid/chip[0]/voice[0]/release 9
+set sid/chip[0]/voice[0]/decay 0
+set sid/chip[0]/voice[0]/sustain 15
+set sid/chip[0]/voice[0]/release 3
+set sid/chip[0]/voice[1]/triangle 1
+set sid/chip[0]/voice[1]/attack 0
+set sid/chip[0]/voice[1]/decay 0
+set sid/chip[0]/voice[1]/sustain 15
+set sid/chip[0]/voice[1]/release 3
 
-set sid/chip[0]/cutoff 1024
-set sid/chip[0]/voice[0]/filter 1
-set sid/chip[0]/lp 1
 
 run sid

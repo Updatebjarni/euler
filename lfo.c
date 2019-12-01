@@ -21,7 +21,7 @@ static int32_t sine(int time, int amp, int per){
   }
 
 static int32_t triangle(int time, int amp, int per){
-  return 0;
+  return 0; //TODO: Implementera
   }
 
 static int32_t sawtooth(int time, int amp, int per){
@@ -35,12 +35,12 @@ static void tick(module *_m, int elapsed){
   int32_t amplitude=m->input.amplitude.value;
   int32_t waveform=m->input.waveform.value;
 
-  // Rewrite the following
-  int32_t length=0;
-  if (frequency!=0)
-    length=1000000/frequency;
+  int length=0;
+  double fr=pow(2.0, 1.0*frequency/OCTAVE)*6.875;
+  if (fr>0)
+    length=1000/fr;
   else
-    length=1000000;
+    length=1000;
   int32_t value=0;
 
   switch(waveform) {
@@ -67,20 +67,6 @@ class lfo_class;
 static module *create(char **argv){
   lfo_module *m=malloc(sizeof(lfo_module));
   base_module_init(m, &lfo_class);
-
-  long a, b, c, d;
-  strtocv("0Hz", &a);
-  printf("0Hz=%i\n", a);
-  strtocv("1Hz", &b);
-  printf("1Hz=%i, diff=%i\n", b, b-a);
-  strtocv("2Hz", &c);
-  printf("2Hz=%i, diff=%i\n", c, c-b);
-  strtocv("3Hz", &d);
-  printf("3Hz=%i, diff=%i\n", d, d-c);
-
-
-//  printf("# of Ticks = %i\n", )
-
   m->time=0;
   return (module *)m;
   }
